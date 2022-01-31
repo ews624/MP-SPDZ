@@ -5,7 +5,150 @@ import numpy as np
 
 # you can assign public numbers to sint
 
+input = sint.Array(35)
+#input.input_from(1)
 
+
+
+
+
+sec_attr= Matrix(4,7,sint)
+
+sec_attr.input_from(0)
+
+a = sint(1)
+b =sint(2)
+
+
+if((a <b).reveal()):
+	print_ln('A is smaller than b')
+
+
+
+sec_examples = sint.Matrix(7,5)
+sec_examples.input_from(1)
+
+if((a <sec_examples[3][4])):
+	print_ln('Matrix comparison works')
+
+
+'''
+def sec_entropy(examples):
+	total = 0
+	yescount = 0
+	nocount = 0
+	entropy = 0
+	temp = sint(1)
+	testing = sbit(1)
+	counter = 0
+	array = []
+	for i in range(7):
+		
+		nonlocal total
+		global nocount
+		nonlocal counter
+		testvar = examples[i][4].reveal()
+		
+		print_ln('REvealed matrix value is %s',testvar.reveal())
+		
+		if((temp <examples[i][4]).reveal()):
+			array.append(0)
+			#nocount = nocount +1
+			#print_ln('No count is %s',nocount)
+			print_ln('temp is less')
+		else:
+			array.append(1)
+			#yescount =yescount + 1
+		total = total + 1
+		print_ln('Total count is %s', total)
+		
+	print_ln('Yes count is %s', yescount)
+	print_ln('No count is %s', nocount)
+	for i in range(len(array)):
+		print_ln('%s',array[i])
+	if (yescount > 0 and nocount >0):
+		entropy = ((yescount/total)*(math.log2(yescount/total)))-((nocount/total)*(math.log2(nocount/total)))
+	else:
+		yescount = 2
+		nocount = 5
+		total = 7
+		print_ln('False entropy')
+		entropy = ((yescount/total)*(math.log2(yescount/total)))-((nocount/total)*(math.log2(nocount/total)))
+	return entropy
+	
+	
+	
+print_ln('%s',sec_entropy(sec_examples))
+
+'''
+'''
+jay = 0
+for i in range(7):
+	for j in range(5):
+		twodim[i][j] = input[jay]
+		jay = jay +1 
+	
+
+for i in range(7):
+	for j in range(5):
+		print_ln('%s',twodim[i][j].reveal())
+'''
+
+
+'''
+@for_range(35)
+def f(i):
+	secretArray[i] = 
+
+
+
+def secret_info_gain():
+	print_ln()
+	
+
+def sec_entropy(examples):
+	total = 0
+	yescount = 0
+	nocount = 0
+	for i in range(7):
+    		if(examples[4][i] == "1"):
+    			nocount = nocount +1
+    		else:
+    			yescount= yescount +1
+    		total = total +1
+	entropy = ((yescount/total)*(log2(yescount/total)))-((nocount/total)*(log2(nocount/total)))
+
+def sec_info_gain(examples, attr):
+    uniq = np.unique(examples[attr])
+    #print ("\n",uniq)
+    gain = sec_entropy(examples)
+    #print ("\n",gain)
+    for u in uniq:
+        subdata = examples[examples[attr] == u]
+        #print ("\n",subdata)
+        sub_e = sec_entropy(subdata)
+        gain -= (float(len(subdata)) / float(len(examples))) * sub_e
+        #print ("\n",gain)
+    return gain
+    	
+def secret_ID3(examples, attrs):
+
+    max_gain = 0
+    max_feat = ""
+    for feature in attrs:
+        #print ("\n",examples)
+        gain = sec_info_gain(examples, feature)
+        if gain > max_gain:
+            max_gain = gain
+            max_feat = feature
+    
+    #print ("\nMax feature attr",max_feat)
+
+'''
+
+
+
+'''
 data = pd.read_csv("3-dataset.csv")
 features = [feat for feat in data]
 features.remove("answer")
@@ -93,26 +236,44 @@ def printTree(root: Node, depth=0):
 root = ID3(data, features)
 printTree(root)
 
-
+'''
 
 
 print_ln('Ethans test')
 
+testarray = [[1,1,1,1,0],[1,1,1,2,0],[2,1,1,1,1]]
 
+print_ln('Ethans 2d array:')
+#for i in testarray:
+#	print_ln(i)
+
+#print_ln('%s',testarray)
+'''
 party1array = []
 party0array = []
 
 for i in range(4):
 	party0array.append(sint.get_raw_input_from(0))
 
-for i in range(4):
-	party1array.append(sint.get_raw_input_from(1))
-
-for i in range(len(party1array)):
-	print_ln('Array value at index %s is %s',i, party1array[i].reveal())	
+#for i in range(4):
+#	party1array.append(sint.get_raw_input_from(1))
+fullarray = []
+for i in range(2):
+	party1array = []
+	for j in range(5):
+		party1array.append(sint.get_raw_input_from(1))
+	fullarray.append(party1array)
 	
 	
-
+	
+	
+#for i in range(len(party1array)):
+#	print_ln('Array value at index %s is %s',i, party1array[i].reveal())	
+for i in range(2):
+	for j in range(5):
+		print_ln('%s',fullarray[i][j].reveal())	
+'''	
+print_ln('Ethans test')
 
 a = sint(1)
 b = sint(2)
@@ -125,7 +286,7 @@ def test(actual, expected):
     print_ln('expected %s, got %s', expected, actual)
 
 
-test(party0array[0] + party1array[0], 6)
+#test(a + b, 3)
 
 
 '''
