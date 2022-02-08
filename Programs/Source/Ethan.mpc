@@ -1,9 +1,89 @@
 import pandas as pd
 import math
 import numpy as np
-# sint: secret integers
+import mpc_math
 
-# you can assign public numbers to sint
+
+sizeofK = 13
+N =10
+n = 0
+eta = 0 
+x =12
+
+	
+
+def lcm(sizeofK):
+	arr =[]
+	for i in range(sizeofK -1):
+		arr.append(i+2)
+	nparray = arr
+	k =np.lcm.reduce(nparray)
+	print_ln('%s',k)
+	return k
+	
+def check_diff(x,i,sign):
+	j =0
+	diff = 1000
+	for j in range(100):
+		eta = .005*j*sign
+		checker = ((2**i)*(1+eta))
+		if(x ==checker):
+			return eta
+		abso = abs(x-checker)
+		if(abso<diff):
+			diff = abso
+			besteta = eta
+		j = j+1
+	return besteta	
+	
+	
+	
+def find_n_eta(x):
+	i = 0
+	j = MemValue(0)
+	@for_range(100)
+	def f(i):
+		print_ln('2^i is %s',2**1)
+		if((2**j.reveal())==x):
+			return i,0
+		if((2**j.reveal())< x):
+			if(x <(2**(j.reveal()+1))):
+			
+				midpoint = (2**j.reveal())*1.5
+				if(x>(midpoint)):
+					eta = check_diff(x,j.reveal()+1,-1)
+					return (j.reveal()+1), eta
+				if(x<(midpoint)):
+					eta = check_diff(x,j.reveal(),1)
+					return j.reveal(),eta
+				else:
+					return j.reveal(),.5
+		#i = i+1
+		j.write(j +1)
+	return 0,0
+
+
+
+
+k = lcm(sizeofK)
+n,eta = find_n_eta(x)
+print_ln('N is equal to %s and eta is equal is to %s',n,eta)
+print_ln('%s = %s which is nice',x,(2**n)*(1+eta))
+print_ln('%s is 2 to the power of 5', 2**5)
+
+
+
+natural_log2 = math.log(2)
+
+
+
+print_ln('The natural log of 2 is %s',natural_log2)
+
+
+
+
+
+
 
 input = sint.Array(35)
 #input.input_from(1)
@@ -19,6 +99,9 @@ sec_attr.input_from(0)
 a = sint(1)
 b =sint(2)
 
+fixed = sfix(10)
+
+
 
 if((a <b).reveal()):
 	print_ln('A is smaller than b')
@@ -28,46 +111,61 @@ if((a <b).reveal()):
 sec_examples = sint.Matrix(7,5)
 sec_examples.input_from(1)
 
-if((a <sec_examples[3][4])):
+if((a <sec_examples[3][4]).reveal()):
 	print_ln('Matrix comparison works')
 
 
-'''
+
 def sec_entropy(examples):
-	total = 0
-	yescount = 0
-	nocount = 0
+	total = sfix.MemValue(0)
+	yescount = sfix.MemValue(0)
+	nocount = MemValue(0)
 	entropy = 0
 	temp = sint(1)
 	testing = sbit(1)
 	counter = 0
-	array = []
-	for i in range(7):
+	array = Array(10,sint)
+	
+	#for i in range(7):
+	@for_range(7)
+	def f(i):
 		
-		nonlocal total
-		global nocount
-		nonlocal counter
-		testvar = examples[i][4].reveal()
-		
-		print_ln('REvealed matrix value is %s',testvar.reveal())
-		
-		if((temp <examples[i][4]).reveal()):
-			array.append(0)
-			#nocount = nocount +1
-			#print_ln('No count is %s',nocount)
-			print_ln('temp is less')
+		compvar = examples[i][4]
+		if((temp<compvar).reveal()):
+			#print_ln('compvar is bigger than 1')
+			array[i] = 2
+			yescount.write(yescount +1)
 		else:
-			array.append(1)
-			#yescount =yescount + 1
-		total = total + 1
-		print_ln('Total count is %s', total)
+			array[i]= 1
+			nocount.write(nocount+1)
+		total.write(total+1)
 		
 	print_ln('Yes count is %s', yescount)
 	print_ln('No count is %s', nocount)
-	for i in range(len(array)):
-		print_ln('%s',array[i])
-	if (yescount > 0 and nocount >0):
-		entropy = ((yescount/total)*(math.log2(yescount/total)))-((nocount/total)*(math.log2(nocount/total)))
+	for i in range(7):
+		print_ln('%s',array[i].reveal())
+		#print_ln('memvalue is %s', yescount.reveal())
+	
+	if (nocount >0):
+		print_ln('real entropy')
+		#testval = sfix(0)
+		#yessint = sfix(0)
+		#yessint = sfix((yescount/total).reveal())
+		#testval = sfix(mpc_math.log2_fx(yessint,2))
+		print_ln('total is %s',total.reveal())
+		#yespartial = yescount/total
+		#print_ln('yes partial is %s', yespartial.reveal())
+		#clearyes = yescount.reveal()
+		#print_ln('clearyes is %s',clearyes)
+		
+		#yessfix = sfix(5)
+		#logyes = mpc_math.log2_fx(yessfix)
+		#print_ln('log is %s',mpc_math.log2_fx(yespartial))
+		
+		#yesreal = sint(yespartial.reveal())
+		#yesfix = sfix(yesreal)
+		#yeslog = mpc_math.log2_fx(yesfix.reveal())
+		#entropy = ((yescount/total)*(math.log2(yescount/total)))-((nocount/total)*(math.log2(nocount/total)))
 	else:
 		yescount = 2
 		nocount = 5
@@ -78,9 +176,9 @@ def sec_entropy(examples):
 	
 	
 	
-print_ln('%s',sec_entropy(sec_examples))
+#print_ln('Entropy is %s',sec_entropy(sec_examples))
 
-'''
+
 '''
 jay = 0
 for i in range(7):
@@ -238,7 +336,7 @@ printTree(root)
 
 '''
 
-
+'''
 print_ln('Ethans test')
 
 testarray = [[1,1,1,1,0],[1,1,1,2,0],[2,1,1,1,1]]
@@ -248,6 +346,10 @@ print_ln('Ethans 2d array:')
 #	print_ln(i)
 
 #print_ln('%s',testarray)
+
+
+
+'''
 '''
 party1array = []
 party0array = []
@@ -273,6 +375,8 @@ for i in range(2):
 	for j in range(5):
 		print_ln('%s',fullarray[i][j].reveal())	
 '''	
+
+'''
 print_ln('Ethans test')
 
 a = sint(1)
@@ -284,7 +388,7 @@ def test(actual, expected):
 
     actual = actual.reveal()
     print_ln('expected %s, got %s', expected, actual)
-
+'''
 
 #test(a + b, 3)
 
