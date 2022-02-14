@@ -18,7 +18,7 @@ sfix.set_precision(8,32)
 def getX(v_1array, v_2array):
 	
 	x = sfix.Matrix(7,5)
-	@for_range_parallel(2,[7,5])
+	@for_range_opt([7,5])
 	def f(i, j):
 		x[i][j] = v_1array[i][j] + v_2array[i][j]
 	
@@ -74,21 +74,24 @@ def find_n_eta(x):
 	array = Array(20,sfix)
 	expo = Array(20,sfix)
 	midpoint = sfix(0)
+	ansN = Array(1,sfix)
+	ansEta = Array(1,sfix)
 	print_ln('value of x is %s',x.reveal())
 	@for_range_opt(20)
 	def f(j):	
 		
 		array[j] = sint(j)
 		#print_ln('j is %s',array[j].reveal())
-		
-		
 		expo[j] = mpc_math.exp2_fx(array[j])
 		#print_ln('2^j is %s',expo[j].reveal())
 		lessthan = (expo[j] <x)
 		equalto = (expo[j] ==x)
 		if(equalto.reveal()):
 			print_ln('perfect value')
-			return j,0
+			ansN[0] = array[j]
+			ansEta[0] = sfix(0)
+			return
+			
 		if(lessthan.reveal()):
 			
 			temp[j] = sint(j+1)
@@ -98,46 +101,42 @@ def find_n_eta(x):
 				midpoint = temp[j] * 1.5
 				if((x > midpoint).reveal()):
 					eta = check_diff(x,j+1,-1)
+					ansN[0] = array[j]
+					ansEta[0] = eta
+					return
 				if((x<midpoint).reveal()):
 					eta = check_diff(x,j,1)
-					return j,eta
+					ansN[0] = array[j]
+					ansEta[0] = sfix(0)
+					return
+					
 				else:
 					eta = sfix(1.5)
-					return j, eta
-		
-			
-		
-		'''
-		 
-		if((2**i)==x):
-			return i,0
-		if((2**i)< x):
-			if(x <(2**(i+1))):
-				print_ln()
-				#print()
-				
-				midpoint = (2**i)#*(1.5)
-				half = midpoint/2
-				midpoint = midpoint + half
-				#secretmid = sint((2**i)*1.5)
-				if(x>(midpoint)):
-					eta = check_diff(x,i+1,-1)
-					return (i+1), eta
-				if(x<(midpoint)):
-					eta = check_diff(x,i,1)
-					return i,eta
-				else:
-					return i,.5
-				
-		i = i+1
-		
-		#j.write(j +1)
-		'''
-		
+					ansN[0] = array[j]
+					ansEta[0] = eta
+					return
+					
+	return ansN[0], ansEta[0]
+
+
+def find_n(array):
+	x = sfix.Matrix(7,5)
+	@for_range_opt([7,5])
+	def f(i, j):
+			x[i][j] = mpc_math.log_fx(array[i][j],2.0)
+	return x
 	
-	return 0,0
-
-
+	#test = sfix(0)
+	'''
+	@for_range_opt(10)
+	def _(i):
+		array[i] = sint(i)
+		array[i+1] = sint(i+1)
+	'''
+	#test = mpc_math.log2_fx(x)
+		
+	#print_ln('closest int %s',test.reveal())
+	
 
 # if size of k is 12 then 27720
 
@@ -145,33 +144,12 @@ def find_n_eta(x):
 #print_ln('size of k is %s',k)
 k=27720
 
-'''
-natural_log2 = math.log(2)
 
-
-print_ln('The natural log of 2 is %s',natural_log2)
-'''
 
 
 
 p1_inputs = sint.Matrix(7,5)
 p1_inputs.input_from(0)
-
-a = sint(1)
-b =sint(2)
-
-fixed = sfix(2)
-
-#logtest = mpc_math.log_fx(fixed,math.e)
-#print_ln('logtest is %s',logtest.reveal())
-
-
-
-
-
-if((a <b).reveal()):
-	print_ln('A is smaller than b')
-
 
 
 p2_inputs = sint.Matrix(7,5)
@@ -182,11 +160,20 @@ print_ln('from p1 this should be 3 %s',p2_inputs[6][0].reveal())
 x = sfix.Matrix(7,5)
 x = getX(p1_inputs,p2_inputs)
 
+logX = sfix.Matrix(7,5)
+logX = find_n(x)
 
+#find_n(x)
+print_ln('The N of x[6][0] is %s',logX[6][0].reveal())
+print_ln('x[6][0] %s',x[6][0].reveal())
+
+#print_ln(' weird answer is %s %s',mpc_math.log_fx(x[6][0],math.e),(2*math.log(2)+math.log(1.25)))
+
+'''
 #finding n and eta 
 n,eta = find_n_eta(x[0][0])
-
-
+print_ln('The values of n and eta are %s, %s',n.reveal(),eta.reveal())
+'''
 
 
 #this is 5
@@ -195,7 +182,7 @@ print_ln('X array is %s',x[6][0].reveal())
 
 
 logarray = lnArray(x)
-print_ln('ln of 5 is %s',logarray[6][0].reveal())
+print_ln('ln of %s is %s',x[6][0].reveal(),logarray[6][0].reveal())
 
 
 def sec_entropy(examples):
