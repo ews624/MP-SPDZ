@@ -1,0 +1,11 @@
+from Compiler import ml
+n_epochs = 20
+sgd = ml.SGD([ml.Dense(60000, 784, 128, activation='relu'),
+              ml.Dense(60000, 128, 10),
+              ml.MultiOutput(60000, 10)], n_epochs,
+             report_loss=True)
+sgd.layers[0].X.input_from(0)
+sgd.layers[1].Y.input_from(1)
+sgd.reset()
+sgd.run()
+
