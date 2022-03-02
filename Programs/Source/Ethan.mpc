@@ -12,8 +12,12 @@ x =12
 #2^N if N = 10
 twoN = 1024
 
-sfix.set_precision(8,32)
-	
+#sfix.set_precision(8,32)
+#With above entro is .949219	
+#Actually answer is .94
+#with it commented out the entro is now .940338
+
+
 
 def getX(v_1array, v_2array):
 	
@@ -148,15 +152,15 @@ k=27720
 
 
 
-p1_inputs = sint.Matrix(7,5)
-p1_inputs.input_from(0)
+p0_inputs = sint.Matrix(14,4)
+p0_inputs.input_from(0)
 
-
+'''
 p2_inputs = sint.Matrix(7,5)
 p2_inputs.input_from(1)
-
-print_ln('from p1 this should be 3 %s',p2_inputs[6][0].reveal())
-
+'''
+print_ln('from p0 this should be 3 %s',p0_inputs[5][0].reveal())
+'''
 x = sfix.Matrix(7,5)
 x = getX(p1_inputs,p2_inputs)
 
@@ -166,8 +170,8 @@ logX = find_n(x)
 #find_n(x)
 print_ln('The N of x[6][0] is %s',logX[6][0].reveal())
 print_ln('x[6][0] %s',x[6][0].reveal())
+'''
 
-#print_ln(' weird answer is %s %s',mpc_math.log_fx(x[6][0],math.e),(2*math.log(2)+math.log(1.25)))
 
 '''
 #finding n and eta 
@@ -175,33 +179,26 @@ n,eta = find_n_eta(x[0][0])
 print_ln('The values of n and eta are %s, %s',n.reveal(),eta.reveal())
 '''
 
-
+'''
 #this is 5
 print_ln('X array is %s',x[6][0].reveal())
 
-
-
 logarray = lnArray(x)
 print_ln('ln of %s is %s',x[6][0].reveal(),logarray[6][0].reveal())
-
-
-def sec_entropy(examples):
+'''
+def sec_entropy(examples, count):
 	total = sfix.MemValue(0)
 	yescount = sfix.MemValue(0)
-	nocount = MemValue(0)
-	entropy = 0
+	nocount = sfix.MemValue(0)
+	entropy = sfix.MemValue(0)
 	temp = sint(1)
 	testing = sbit(1)
-	counter = 0
-	array = Array(10,sint)
-	
-	#for i in range(7):
-	@for_range(7)
+	array = Array(14,sint)
+
+	@for_range_opt(14)
 	def f(i):
-		
-		compvar = examples[i][4]
+		compvar = examples[i][count]
 		if((temp<compvar).reveal()):
-			#print_ln('compvar is bigger than 1')
 			array[i] = 2
 			yescount.write(yescount +1)
 		else:
@@ -209,48 +206,35 @@ def sec_entropy(examples):
 			nocount.write(nocount+1)
 		total.write(total+1)
 		
-	print_ln('Yes count is %s', yescount)
-	print_ln('No count is %s', nocount)
-	for i in range(7):
+	#print_ln('Yes count is %s', yescount.reveal())
+	#print_ln('No count is %s', nocount.reveal())
+	'''
+	@for_range_opt(14)
+	def l(i):
 		print_ln('%s',array[i].reveal())
 		#print_ln('memvalue is %s', yescount.reveal())
-	
-	if (nocount >0):
-		print_ln('real entropy')
-		#testval = sfix(0)
-		#yessint = sfix(0)
-		#yessint = sfix((yescount/total).reveal())
-		#testval = sfix(mpc_math.log2_fx(yessint,2))
-		print_ln('total is %s',total.reveal())
-		#yespartial = yescount/total
-		#print_ln('yes partial is %s', yespartial.reveal())
-		#clearyes = yescount.reveal()
-		#print_ln('clearyes is %s',clearyes)
+	'''
+	if ((nocount >0).reveal()):
+		#print_ln('real entropy')
 		
-		#yessfix = sfix(5)
-		#logyes = mpc_math.log2_fx(yessfix)
-		#print_ln('log is %s',mpc_math.log2_fx(yespartial))
+		nosint = sfix((nocount/total))
+		yessint = sfix((yescount/total))
+		testval = sfix(mpc_math.log2_fx(yessint))
+		#print_ln('yessint is %s', testval.reveal())
+		testval = sfix(mpc_math.log2_fx(nocount/total))
+		#print_ln('nosint is %s', testval.reveal())
+		#print_ln('total is %s',total.reveal())
 		
-		#yesreal = sint(yespartial.reveal())
-		#yesfix = sfix(yesreal)
-		#yeslog = mpc_math.log2_fx(yesfix.reveal())
-		#entropy = ((yescount/total)*(math.log2(yescount/total)))-((nocount/total)*(math.log2(nocount/total)))
+		entropy.write( -((yescount/total)*(mpc_math.log2_fx(yescount/total)))-((nocount/total)*(mpc_math.log2_fx(nocount/total))) )
 	else:
-		yescount = 2
-		nocount = 5
-		total = 7
 		print_ln('False entropy')
-		entropy = ((yescount/total)*(math.log2(yescount/total)))-((nocount/total)*(math.log2(nocount/total)))
 	return entropy
 	
-	
-	
-#print_ln('Entropy is %s',sec_entropy(sec_examples))
-
-
-
-
-
+EntroArray = Array(4,sfix)	
+@for_range_opt(4)
+def fl(i):
+	EntroArray[i] = sec_entropy(p0_inputs,i)
+	print_ln('Entropy is %s',EntroArray[i].reveal())
 
 
 

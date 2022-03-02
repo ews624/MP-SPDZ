@@ -1,0 +1,85 @@
+import pandas as pd
+import math
+import numpy as np
+import mpc_math
+
+
+
+#sfix.set_precision(8,32)
+#With above entro is .949219	
+#Actually answer is .94
+#with it commented out the entro is now .940338
+
+
+p0_inputs = sint.Matrix(14,4)
+p0_inputs.input_from(0)
+
+
+print_ln('from p0 this should be 3 %s',p0_inputs[5][0].reveal())
+
+
+def sec_entropy(examples, count):
+	total = sfix.MemValue(0)
+	yescount = sfix.MemValue(0)
+	nocount = sfix.MemValue(0)
+	entropy = sfix.MemValue(0)
+	temp = sint(1)
+	two = sint(2)
+	testing = sint(0)
+	different_attri = Array(10,sfix)
+	attri_count = sint.MemValue(0)
+	different_attri.assign_all(0)
+	x = sfix(0)
+	array = Array(14,sint)
+
+	@for_range_opt(14)
+	def f(i):
+		compvar = examples[i][count]
+		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
+		
+		if((attri_count < compvar).reveal()):
+			attri_count.write(compvar.reveal())
+		
+		
+		'''
+		if((temp<compvar).reveal()):
+			
+			array[i] = 2
+			yescount.write(yescount +1)
+		else:
+			array[i]= 1
+			nocount.write(nocount+1)
+		'''
+		total.write(total+1)
+		
+	#print_ln('Yes count is %s', yescount.reveal())
+	#print_ln('No count is %s', nocount.reveal())
+	
+	
+	#print_ln('total is %s',total.reveal())
+	#print_ln('attir count is %s',attri_count.reveal())	
+	
+	
+	
+	@for_range_opt(attri_count.reveal())
+	def W(i):
+		testing = different_attri[i]
+		x = testing/total
+		#print_ln('x is %s',x.reveal())
+		entropy.write(entropy -(x*(mpc_math.log2_fx(x))))
+	
+	
+	
+	#entropy.write( -((yescount/total)*(mpc_math.log2_fx(yescount/total)))-((nocount/total)*(mpc_math.log2_fx(nocount/total))) )
+	
+	return entropy
+	
+EntroArray = Array(4,sfix)	
+@for_range_opt(4)
+def fl(i):
+	EntroArray[i] = sec_entropy(p0_inputs,i)
+	print_ln('Entropy is %s',EntroArray[i].reveal())
+
+
+
+
