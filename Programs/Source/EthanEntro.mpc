@@ -40,26 +40,13 @@ def sec_entropy(examples, count):
 		if((attri_count < compvar).reveal()):
 			attri_count.write(compvar.reveal())
 		
-		
-		'''
-		if((temp<compvar).reveal()):
-			
-			array[i] = 2
-			yescount.write(yescount +1)
-		else:
-			array[i]= 1
-			nocount.write(nocount+1)
-		'''
 		total.write(total+1)
 		
 	#print_ln('Yes count is %s', yescount.reveal())
 	#print_ln('No count is %s', nocount.reveal())
 	
-	
 	#print_ln('total is %s',total.reveal())
 	#print_ln('attir count is %s',attri_count.reveal())	
-	
-	
 	
 	@for_range_opt(attri_count.reveal())
 	def W(i):
@@ -68,10 +55,6 @@ def sec_entropy(examples, count):
 		#print_ln('x is %s',x.reveal())
 		entropy.write(entropy -(x*(mpc_math.log2_fx(x))))
 	
-	
-	
-	#entropy.write( -((yescount/total)*(mpc_math.log2_fx(yescount/total)))-((nocount/total)*(mpc_math.log2_fx(nocount/total))) )
-	
 	return entropy
 	
 EntroArray = Array(4,sfix)	
@@ -79,7 +62,6 @@ EntroArray = Array(4,sfix)
 def fl(i):
 	EntroArray[i] = sec_entropy(p0_inputs,i)
 	print_ln('Entropy is %s',EntroArray[i].reveal())
-
 
 
 
