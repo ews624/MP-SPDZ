@@ -6,7 +6,7 @@ import mpc_math
 
 
 #sfix.set_precision(8,32)
-#With above entro is .949219	
+#With above entro is .949219
 #Actually answer is .94
 #with it commented out the entro is now .940338
 
@@ -36,32 +36,31 @@ def sec_entropy(examples, count):
 	def f(i):
 		compvar = examples[i][count]
 		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
-		
+
 		if((attri_count < compvar).reveal()):
 			attri_count.write(compvar.reveal())
-		
+
 		total.write(total+1)
-		
+
 	#print_ln('Yes count is %s', yescount.reveal())
 	#print_ln('No count is %s', nocount.reveal())
-	
+
 	#print_ln('total is %s',total.reveal())
-	#print_ln('attir count is %s',attri_count.reveal())	
-	
+	#print_ln('attir count is %s',attri_count.reveal())
+
 	@for_range_opt(attri_count.reveal())
 	def W(i):
 		testing = different_attri[i]
 		x = testing/total
 		#print_ln('x is %s',x.reveal())
 		entropy.write(entropy -(x*(mpc_math.log2_fx(x))))
-	
+
 	return entropy
-	
-EntroArray = Array(4,sfix)	
+
+EntroArray = Array(4,sfix)
 @for_range_opt(4)
 def fl(i):
 	EntroArray[i] = sec_entropy(p0_inputs,i)
 	print_ln('Entropy is %s',EntroArray[i].reveal())
 
-
-
+print_ln('the last index in the array is %s', EntroArray[-1].reveal())

@@ -121,3 +121,6 @@ Thumbs.db
 
 # Sphinx build
 _build/
+Player-Data/Public-Output-0-1
+Player-Data/Binary-Output-P0-1
+Player-Data/Private-Output-0-1
