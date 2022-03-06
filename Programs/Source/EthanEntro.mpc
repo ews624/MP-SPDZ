@@ -71,9 +71,7 @@ print_ln('the last index in the array is %s', EntroArray[-1].reveal())
 def sec_entropy(examples,count):
 	total = sfix.MemValue(0)
 	
-	entropy = sfix.MemValue(0)
-	temp = sint(1)
-	two = sint(2)
+	
 	testing = sint(0)
 	different_attri = Array(10,sfix)
 	
@@ -92,19 +90,14 @@ def sec_entropy(examples,count):
 		if((lastvar ==temp).reveal()):
 			shape_array[compvar.reveal()-1] = shape_array[compvar.reveal()-1] +1
 		
-		
 		if((attri_count < compvar).reveal()):
 			attri_count.write(compvar.reveal())
-		total.write(total+1)
+		
 	print_ln('different attri first index is %s',different_attri[0].reveal())
 	
-	
-	#print_ln('total is %s',total.reveal())
 	#print_ln('attir count is %s',attri_count.reveal())
 
-
 	return_Array = Array(5,sfix)
-
 
 	@for_range_opt(attri_count.reveal())
 	def W(i):
@@ -114,8 +107,6 @@ def sec_entropy(examples,count):
 		#print_ln('shape array is %s',top.reveal())
 		x = top/denom
 		#print_ln('x is %s',x.reveal())
-		
-		#entropy.write(entropy -(x*mpc_math.log2_fx(x))
 		
 		rest = denom-top
 		rest = rest/denom
