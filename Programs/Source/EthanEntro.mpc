@@ -57,7 +57,7 @@ def first_entropy(examples, count):
 		entropy.write(entropy -(x*(mpc_math.log2_fx(x))))
 
 	return entropy
-'''
+
 EntroArray = Array(4,sfix)
 @for_range_opt(4)
 def fl(i):
@@ -66,16 +66,15 @@ def fl(i):
 
 print_ln('the last index in the array is %s', EntroArray[-1].reveal())
 
-'''
 
-def sec_entropy(examples,count):
-	total = sfix.MemValue(0)
+
+def sec_entropy(examples,color_array,count):
+	#total = sfix.MemValue(0)
 	
-	
-	testing = sint(0)
+	#testing = sint(0)
 	different_attri = Array(10,sfix)
-	
-	attri_count = sint.MemValue(0)
+	temp = sint(1)
+	attri_count = sint.MemValue(1)
 	different_attri.assign_all(0)
 	x = sfix(0)
 	array = Array(14,sint)
@@ -93,16 +92,17 @@ def sec_entropy(examples,count):
 		if((attri_count < compvar).reveal()):
 			attri_count.write(compvar.reveal())
 		
-	print_ln('different attri first index is %s',different_attri[0].reveal())
+	print_ln('There are %s 1s, %s 2s,and %s 3 in the %s column',different_attri[0].reveal(),different_attri[1].reveal(),different_attri[2].reveal(), count)
 	
-	#print_ln('attir count is %s',attri_count.reveal())
+	print_ln('attir count is %s',attri_count.reveal())
 
 	return_Array = Array(5,sfix)
 
 	@for_range_opt(attri_count.reveal())
 	def W(i):
 		denom = different_attri[i]
-		#print_ln('%s',denom.reveal())
+		print_ln('%s',denom.reveal())
+		color_array[i] = denom
 		top = shape_array[i]
 		#print_ln('shape array is %s',top.reveal())
 		x = top/denom
@@ -110,16 +110,22 @@ def sec_entropy(examples,count):
 		
 		rest = denom-top
 		rest = rest/denom
-		print_ln('rest is %s',rest.reveal())
+		#print_ln('rest is %s',rest.reveal())
 		partone = (x*mpc_math.log2_fx(x))
-		print_ln('partone is %s',partone.reveal())
+		#print_ln('partone is %s',partone.reveal())
 		parttwo = (rest*mpc_math.log2_fx(rest))
-		print_ln('parttwo is %s',parttwo.reveal())
+		#print_ln('parttwo is %s',parttwo.reveal())
 		return_Array[i] = (-partone)+(-parttwo)
 	return return_Array
-second_array = sec_entropy(p0_inputs,0)
 
-print_ln('first index in return array is %s',second_array[0].reveal())
+second_color_array = Array(3,sfix)
+second_entro_array = sec_entropy(p0_inputs,second_color_array,0)
+print_ln('Color count of green is %s',second_color_array[0].reveal())
+print_ln('first index in return array is %s',second_entro_array[0].reveal())
+
+print_ln('second index in return array is %s',second_entro_array[1].reveal())
+
+print_ln('third index in return array is %s',second_entro_array[2].reveal())
 
 #print_ln('Second Entropy is %s',sec_entropy(p0_inputs,0))
 
