@@ -15,13 +15,12 @@ p0_inputs = sint.Matrix(14,4)
 p0_inputs.input_from(0)
 
 
-print_ln('from p0 this should be 3 %s',p0_inputs[5][0].reveal())
+#print_ln('from p0 this should be 3 %s',p0_inputs[5][0].reveal())
 
 
 def first_entropy(examples, count):
 	total = sfix.MemValue(0)
-	yescount = sfix.MemValue(0)
-	nocount = sfix.MemValue(0)
+	
 	entropy = sfix.MemValue(0)
 	temp = sint(1)
 	two = sint(2)
@@ -51,9 +50,9 @@ def first_entropy(examples, count):
 	@for_range_opt(attri_count.reveal())
 	def W(i):
 		testing = different_attri[i]
-		print_ln('%s',testing.reveal())
+		#print_ln('%s',testing.reveal())
 		x = testing/total
-		print_ln('x is %s',x.reveal())
+		#print_ln('x is %s',x.reveal())
 		entropy.write(entropy -(x*(mpc_math.log2_fx(x))))
 
 	return entropy
@@ -69,9 +68,6 @@ print_ln('the last index in the array is %s', EntroArray[-1].reveal())
 
 
 def sec_entropy(examples,color_array,count):
-	#total = sfix.MemValue(0)
-	
-	#testing = sint(0)
 	different_attri = Array(10,sfix)
 	temp = sint(1)
 	attri_count = sint.MemValue(1)
@@ -92,16 +88,16 @@ def sec_entropy(examples,color_array,count):
 		if((attri_count < compvar).reveal()):
 			attri_count.write(compvar.reveal())
 		
-	print_ln('There are %s 1s, %s 2s,and %s 3 in the %s column',different_attri[0].reveal(),different_attri[1].reveal(),different_attri[2].reveal(), count)
+	#print_ln('There are %s 1s, %s 2s,and %s 3 in the %s column',different_attri[0].reveal(),different_attri[1].reveal(),different_attri[2].reveal(), count)
 	
-	print_ln('attir count is %s',attri_count.reveal())
+	#print_ln('attir count is %s',attri_count.reveal())
 
 	return_Array = Array(5,sfix)
 
 	@for_range_opt(attri_count.reveal())
 	def W(i):
 		denom = different_attri[i]
-		print_ln('%s',denom.reveal())
+		#print_ln('%s',denom.reveal())
 		color_array[i] = denom
 		top = shape_array[i]
 		#print_ln('shape array is %s',top.reveal())
@@ -121,6 +117,9 @@ def sec_entropy(examples,color_array,count):
 second_color_array = Array(3,sfix)
 second_entro_array = sec_entropy(p0_inputs,second_color_array,0)
 print_ln('Color count of green is %s',second_color_array[0].reveal())
+
+total_rows = second_color_array[0] + second_color_array[1] + second_color_array[2]
+
 print_ln('first index in return array is %s',second_entro_array[0].reveal())
 
 print_ln('second index in return array is %s',second_entro_array[1].reveal())
@@ -129,6 +128,31 @@ print_ln('third index in return array is %s',second_entro_array[2].reveal())
 
 #print_ln('Second Entropy is %s',sec_entropy(p0_inputs,0))
 
+
+sum_of_Entro = ((second_color_array[0]/total_rows)*second_entro_array[0]) + ((second_color_array[1]/total_rows)*second_entro_array[1]) + ((second_color_array[2]/total_rows)*second_entro_array[2])
+
+print_ln('the sum of the entros is %s',  sum_of_Entro.reveal())
+
+
+gain = EntroArray[-1] - sum_of_Entro
+print_ln('Gain for color is %s', gain.reveal())
+
+
+
+second_array = Array(3,sfix)
+outline_entro_array =  sec_entropy(p0_inputs,second_array,1)
+
+sum_of_Entro = ((second_array[0]/total_rows)*outline_entro_array[0]) + ((second_array[1]/total_rows)*outline_entro_array[1])
+
+gain = EntroArray[-1] - sum_of_Entro
+print_ln('Gain for outline is %s', gain.reveal())
+
+
+second_array.assign_all(0)
+dot_entro_array = sec_entropy(p0_inputs,second_array,2)
+sum_of_Entro = ((second_array[0]/total_rows)*dot_entro_array[0]) + ((second_array[1]/total_rows)*dot_entro_array[1])
+gain = EntroArray[-1] - sum_of_Entro
+print_ln('Gain for dot is %s', gain.reveal())
 
 
 
