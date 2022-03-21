@@ -14,6 +14,12 @@ import mpc_math
 p0_inputs = sint.Matrix(14,4)
 p0_inputs.input_from(0)
 
+p1_inputs = sint.Matrix(14,4)
+p1_inputs.input_from(1)
+
+p2_inputs = sint.Matrix(14,4)
+p2_inputs.input_from(2)
+
 
 #print_ln('from p0 this should be 3 %s',p0_inputs[5][0].reveal())
 
@@ -41,9 +47,6 @@ def first_entropy(examples, count):
 
 		total.write(total+1)
 
-	#print_ln('Yes count is %s', yescount.reveal())
-	#print_ln('No count is %s', nocount.reveal())
-
 	#print_ln('total is %s',total.reveal())
 	#print_ln('attir count is %s',attri_count.reveal())
 
@@ -57,15 +60,68 @@ def first_entropy(examples, count):
 
 	return entropy
 
+def first_shamir_entropy(p0,p1,p2, count):
+	total = sfix.MemValue(0)
+	
+	entropy = sfix.MemValue(0)
+	temp = sint(1)
+	two = sint(2)
+	testing = sint(0)
+	different_attri = Array(10,sfix)
+	attri_count = sint.MemValue(0)
+	different_attri.assign_all(0)
+	p1_attri = Array(10,sfix)
+	p1_attri.assign_all(0)
+	p2_attri = Array(10,sfix)
+	p2_attri.assign_all(0)
+	x = sfix(0)
+
+	array = Array(14,sint)
+
+	p0count = sfix.MemValue(0)
+
+
+	@for_range_opt(14)
+	def f(i):
+		p0var = p0[i][count]
+		different_attri[p0var.reveal()-1] =  different_attri[p0var.reveal()-1] +1
+		
+		p1var = p1[i][count]
+		p1_attri[p1var.reveal()-1] =  p1_attri[p1var.reveal()-1] +1
+		
+		p2var = p2[i][count]
+		p2_attri[p2var.reveal()-1] =  p2_attri[p2var.reveal()-1] +1
+		
+		if((attri_count < p0var).reveal()):
+			attri_count.write(p0var.reveal())
+
+		total.write(total+3)
+
+	#print_ln('total is %s',total.reveal())
+	#print_ln('attir count is %s',attri_count.reveal())
+
+	@for_range_opt(attri_count.reveal())
+	def W(i):
+		testing = different_attri[i] + p1_attri[i] + p2_attri[i]
+		#print_ln('%s',testing.reveal())
+		x = testing/total
+		#print_ln('x is %s',x.reveal())
+		entropy.write(entropy -(x*(mpc_math.log2_fx(x))))
+
+	return entropy
+
 EntroArray = Array(4,sfix)
+first_shamir_array = Array(4,sfix)
 @for_range_opt(4)
 def fl(i):
 	EntroArray[i] = first_entropy(p0_inputs,i)
-	print_ln('Entropy is %s',EntroArray[i].reveal())
+	print_ln('Normal Entropy is %s',EntroArray[i].reveal())
+	first_shamir_array[i] = first_shamir_entropy(p0_inputs,p1_inputs,p2_inputs,i)
+	print_ln('Shamir Entropy is %s',first_shamir_array[i].reveal())
 
 print_ln('the last index in the array is %s', EntroArray[-1].reveal())
 
-
+'''
 
 def sec_entropy(examples,color_array,count):
 	different_attri = Array(10,sfix)
@@ -120,11 +176,6 @@ print_ln('Color count of green is %s',second_color_array[0].reveal())
 
 total_rows = second_color_array[0] + second_color_array[1] + second_color_array[2]
 
-print_ln('first index in return array is %s',second_entro_array[0].reveal())
-
-print_ln('second index in return array is %s',second_entro_array[1].reveal())
-
-print_ln('third index in return array is %s',second_entro_array[2].reveal())
 
 #print_ln('Second Entropy is %s',sec_entropy(p0_inputs,0))
 
@@ -153,6 +204,6 @@ dot_entro_array = sec_entropy(p0_inputs,second_array,2)
 sum_of_Entro = ((second_array[0]/total_rows)*dot_entro_array[0]) + ((second_array[1]/total_rows)*dot_entro_array[1])
 gain = EntroArray[-1] - sum_of_Entro
 print_ln('Gain for dot is %s', gain.reveal())
-
+'''
 
 
