@@ -1,0 +1,183 @@
+import math
+import mpc_math
+
+
+
+#sfix.set_precision(8,32)
+#With above entro is .949219
+#Actually answer is .94
+#with it commented out the entro is now .940338
+
+
+def first_entropy(examples, count,range):
+	total = sfix.MemValue(0)
+	entropy = sfix.MemValue(0)
+	testing = sint(0)
+	different_attri = Array(10,sfix)
+	different_attri.assign_all(0)
+	x = sfix(0)
+	skip = 0
+	biggest = sint.MemValue(0)
+	@for_range_opt(range)
+	def f(i):
+		compvar = examples[i][count]
+		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
+		
+		compint = sint(compvar)
+		tester  = sint(biggest)
+		compint = (tester < compint).if_else(compint,tester)
+		biggest.write(compint)
+		
+		
+		#bug comparison 
+		#if removed function doesnt work later on
+		if((sint(0) < sint(1)).reveal()):
+			skip = 0
+			
+		total.write(total+1)
+	
+	@for_range_opt(biggest.reveal())
+	def W(i):
+		testing = different_attri[i]
+		x = testing/total
+		entropy.write(entropy -(x*(mpc_math.log2_fx(x))))
+
+	return entropy
+
+def sec_entropy(examples,color_array,count,range):
+	different_attri = Array(10,sfix)
+	temp = sint(1)
+	attri_count = sint.MemValue(1)
+	different_attri.assign_all(0)
+	x = sfix(0)
+	array = Array(14,sint)
+	shape_array = Array(10,sfix)
+	shape_array.assign_all(0)
+	@for_range_opt(range)
+	def f(i):
+		compvar = examples[i][count]
+		lastvar = examples[i][3]
+		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
+		
+		if((lastvar ==temp).reveal()):
+			shape_array[compvar.reveal()-1] = shape_array[compvar.reveal()-1] +1
+		
+		if((attri_count < compvar).reveal()):
+			attri_count.write(compvar.reveal())
+		
+	#print_ln('There are %s 1s, %s 2s,and %s 3 in the %s column',different_attri[0].reveal(),different_attri[1].reveal(),different_attri[2].reveal(), count)
+	
+	#print_ln('attir count is %s',attri_count.reveal())
+
+	return_Array = Array(5,sfix)
+
+	@for_range_opt(attri_count.reveal())
+	def W(i):
+		denom = different_attri[i]
+		#print_ln('%s',denom.reveal())
+		color_array[i] = denom
+		top = shape_array[i]
+		#print_ln('shape array is %s',top.reveal())
+		x = top/denom
+		#print_ln('x is %s',x.reveal())
+		
+		rest = denom-top
+		rest = rest/denom
+		#print_ln('rest is %s',rest.reveal())
+		partone = (x*mpc_math.log2_fx(x))
+		#print_ln('partone is %s',partone.reveal())
+		parttwo = (rest*mpc_math.log2_fx(rest))
+		#print_ln('parttwo is %s',parttwo.reveal())
+		return_Array[i] = (-partone)+(-parttwo)
+	return return_Array
+
+p0_inputs = sint.Matrix(14,4)
+p0_inputs.input_from(0)
+
+p1_inputs = sint.Matrix(14,4)
+p1_inputs.input_from(1)
+
+p2_inputs = sint.Matrix(14,4)
+p2_inputs.input_from(2)
+
+
+shamir_input = sint.Matrix(42,4)
+
+@for_range_parallel(3,[14,4])
+def hi(i,j):	
+	shamir_input[i][j] = p0_inputs[i][j]
+	shamir_input[i+14][j] = p1_inputs[i][j]
+	shamir_input[i+28][j] = p2_inputs[i][j]
+
+
+
+EntroArray = Array(4,sfix)
+first_shamir_array = Array(4,sfix)
+total_shamir_array = Array(4,sfix)
+@for_range_opt(4)
+def fl(i):
+	EntroArray[i] = first_entropy(p0_inputs,i,14)
+	total_shamir_array[i] = first_entropy(shamir_input,i,42)
+	print_ln('Total shamir array is %s', total_shamir_array[i].reveal())
+	print_ln('Normal Entropy is %s',EntroArray[i].reveal())
+
+
+max_Initial_Entro = sfix.MemValue(0.0)
+f = sint(-1)
+@for_range_opt(4)
+def fl(i):
+	f = (max_Initial_Entro < total_shamir_array[i])
+	max_Initial_Entro.write( (total_shamir_array[i]*f)+ (max_Initial_Entro*(sint(1)-f)))
+	
+	
+print_ln('max_Initial_Entro is %s', max_Initial_Entro.reveal())
+	
+	
+#### Need to work on everything after this comment	
+
+
+second_color_array = Array(3,sfix)
+
+
+
+second_entro_array = sec_entropy(p0_inputs,second_color_array,0,42)
+
+
+
+
+print_ln('Color count of green is %s',second_color_array[0].reveal())
+
+total_rows = second_color_array[0] + second_color_array[1] + second_color_array[2]
+
+
+
+
+
+sum_of_Entro = ((second_color_array[0]/total_rows)*second_entro_array[0]) + ((second_color_array[1]/total_rows)*second_entro_array[1]) + ((second_color_array[2]/total_rows)*second_entro_array[2])
+
+print_ln('the sum of the entros is %s',  sum_of_Entro.reveal())
+
+
+gain = EntroArray[-1] - sum_of_Entro
+print_ln('Gain for color is %s', gain.reveal())
+
+
+
+second_array = Array(3,sfix)
+outline_entro_array =  sec_entropy(p0_inputs,second_array,1,42)
+
+sum_of_Entro = ((second_array[0]/total_rows)*outline_entro_array[0]) + ((second_array[1]/total_rows)*outline_entro_array[1])
+
+gain = EntroArray[-1] - sum_of_Entro
+print_ln('Gain for outline is %s', gain.reveal())
+
+
+second_array.assign_all(0)
+dot_entro_array = sec_entropy(p0_inputs,second_array,2,42)
+sum_of_Entro = ((second_array[0]/total_rows)*dot_entro_array[0]) + ((second_array[1]/total_rows)*dot_entro_array[1])
+gain = EntroArray[-1] - sum_of_Entro
+print_ln('Gain for dot is %s', gain.reveal())	
+	
+
+
+
