@@ -22,20 +22,19 @@ def first_entropy(examples, count,range):
 	def f(i):
 		compvar = examples[i][count]
 		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
-		
+
 		compint = sint(compvar)
 		tester  = sint(biggest)
 		compint = (tester < compint).if_else(compint,tester)
 		biggest.write(compint)
-		
-		
-		#bug comparison 
+
+		#bug comparison
 		#if removed function doesnt work later on
 		if((sint(0) < sint(1)).reveal()):
 			skip = 0
-			
+
 		total.write(total+1)
-	
+
 	@for_range_opt(biggest.reveal())
 	def W(i):
 		testing = different_attri[i]
@@ -44,7 +43,23 @@ def first_entropy(examples, count,range):
 
 	return entropy
 
-def sec_entropy(examples,color_array,count,range):
+
+
+def get_gain(EntroValue,attri_count,Comparison_Entropy,numerator,range):
+
+	sum_of_Entro = sfix.MemValue(0.0)
+	@for_range_opt(attri_count)
+	def tr(i):
+		#print_ln('numerator is %s',numerator[i].reveal())
+		#print_ln('Entropy is %s',EntroValue[i].reveal())
+		sum_of_Entro.write(((numerator[i]/range)*EntroValue[i])+ sum_of_Entro)
+	#print_ln('sum of entro is %s',sum_of_Entro.reveal())
+	gain = Comparison_Entropy - sum_of_Entro
+
+	return gain
+
+
+def sec_entropy(examples,column_array,Comparison_Entropy,column_number,range):
 	different_attri = Array(10,sfix)
 	temp = sint(1)
 	attri_count = sint.MemValue(1)
@@ -53,20 +68,21 @@ def sec_entropy(examples,color_array,count,range):
 	array = Array(14,sint)
 	shape_array = Array(10,sfix)
 	shape_array.assign_all(0)
+	gain = sfix(0.0)
 	@for_range_opt(range)
 	def f(i):
-		compvar = examples[i][count]
+		compvar = examples[i][column_number]
 		lastvar = examples[i][3]
 		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
-		
+
 		if((lastvar ==temp).reveal()):
 			shape_array[compvar.reveal()-1] = shape_array[compvar.reveal()-1] +1
-		
+
 		if((attri_count < compvar).reveal()):
 			attri_count.write(compvar.reveal())
-		
+
 	#print_ln('There are %s 1s, %s 2s,and %s 3 in the %s column',different_attri[0].reveal(),different_attri[1].reveal(),different_attri[2].reveal(), count)
-	
+
 	#print_ln('attir count is %s',attri_count.reveal())
 
 	return_Array = Array(5,sfix)
@@ -75,12 +91,12 @@ def sec_entropy(examples,color_array,count,range):
 	def W(i):
 		denom = different_attri[i]
 		#print_ln('%s',denom.reveal())
-		color_array[i] = denom
+		column_array[i] = denom
 		top = shape_array[i]
 		#print_ln('shape array is %s',top.reveal())
 		x = top/denom
 		#print_ln('x is %s',x.reveal())
-		
+
 		rest = denom-top
 		rest = rest/denom
 		#print_ln('rest is %s',rest.reveal())
@@ -89,7 +105,11 @@ def sec_entropy(examples,color_array,count,range):
 		parttwo = (rest*mpc_math.log2_fx(rest))
 		#print_ln('parttwo is %s',parttwo.reveal())
 		return_Array[i] = (-partone)+(-parttwo)
-	return return_Array
+		#print_ln('return_Array is %s',return_Array[i].reveal())
+
+	gain = get_gain(return_Array,attri_count.reveal(),Comparison_Entropy,different_attri,range)
+	print_ln('Gain is %s',gain.reveal())
+	return gain
 
 p0_inputs = sint.Matrix(14,4)
 p0_inputs.input_from(0)
@@ -104,7 +124,7 @@ p2_inputs.input_from(2)
 shamir_input = sint.Matrix(42,4)
 
 @for_range_parallel(3,[14,4])
-def hi(i,j):	
+def hi(i,j):
 	shamir_input[i][j] = p0_inputs[i][j]
 	shamir_input[i+14][j] = p1_inputs[i][j]
 	shamir_input[i+28][j] = p2_inputs[i][j]
@@ -116,10 +136,10 @@ first_shamir_array = Array(4,sfix)
 total_shamir_array = Array(4,sfix)
 @for_range_opt(4)
 def fl(i):
-	EntroArray[i] = first_entropy(p0_inputs,i,14)
+	#EntroArray[i] = first_entropy(p0_inputs,i,14)
 	total_shamir_array[i] = first_entropy(shamir_input,i,42)
 	print_ln('Total shamir array is %s', total_shamir_array[i].reveal())
-	print_ln('Normal Entropy is %s',EntroArray[i].reveal())
+	#print_ln('Normal Entropy is %s',EntroArray[i].reveal())
 
 
 max_Initial_Entro = sfix.MemValue(0.0)
@@ -128,22 +148,27 @@ f = sint(-1)
 def fl(i):
 	f = (max_Initial_Entro < total_shamir_array[i])
 	max_Initial_Entro.write( (total_shamir_array[i]*f)+ (max_Initial_Entro*(sint(1)-f)))
-	
-	
+
+
 print_ln('max_Initial_Entro is %s', max_Initial_Entro.reveal())
-	
-	
-#### Need to work on everything after this comment	
 
 
-second_color_array = Array(3,sfix)
+#### Need to work on everything after this comment
 
 
-
-second_entro_array = sec_entropy(p0_inputs,second_color_array,0,42)
-
+column_array = Array(3,sfix)
 
 
+Comparison_Entropy = total_shamir_array[3]
+
+
+gain_array = Array(3,sfix)
+@for_range_opt(3)
+def gainAll(i):
+	gain_array= sec_entropy(shamir_input,column_array,Comparison_Entropy,i,42)
+
+
+'''
 
 print_ln('Color count of green is %s',second_color_array[0].reveal())
 
@@ -176,8 +201,5 @@ second_array.assign_all(0)
 dot_entro_array = sec_entropy(p0_inputs,second_array,2,42)
 sum_of_Entro = ((second_array[0]/total_rows)*dot_entro_array[0]) + ((second_array[1]/total_rows)*dot_entro_array[1])
 gain = EntroArray[-1] - sum_of_Entro
-print_ln('Gain for dot is %s', gain.reveal())	
-	
-
-
-
+print_ln('Gain for dot is %s', gain.reveal())
+'''
