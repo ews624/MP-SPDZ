@@ -309,6 +309,11 @@ Share Types
      - ``SpdzWiseShare<T>``
      - `SPDZ-wise <https://eprint.iacr.org/2018/570>`_. ``T`` must be
        ``MaliciousShamirShare`` or ``MaliciousRep3Share``.
+   *
+     - ``TemiShare<T>``
+     - Semi-honest protocol with Beaver multiplication based on
+       threshold semi-homomorphic encryption. ``T`` must be
+       ``gfp_<X, L>`` or ``gf2n_short``.
 
 
 Protocol Setup
@@ -349,4 +354,20 @@ Protocol Interfaces
    :members:
 
 .. doxygenclass:: BufferPrep
+   :members:
+
+
+Domain Reference
+----------------
+
+.. doxygenclass:: gfp_
+   :members:
+
+.. doxygenclass:: gfpvar_
+   :members:
+
+.. doxygenclass:: Z2
+   :members:
+
+.. doxygenclass:: SignedZ2
    :members:
