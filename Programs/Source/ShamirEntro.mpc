@@ -62,32 +62,42 @@ def get_gain(EntroValue,attri_count,Comparison_Entropy,numerator,range):
 def sec_entropy(examples,column_array,Comparison_Entropy,column_number,range):
 	different_attri = Array(10,sfix)
 	temp = sint(1)
-	attri_count = sint.MemValue(1)
+	lastint = sint(0)
+	skip = 0
+	mover = sfix(0.0)
+	#attri_count = sint.MemValue(1)
 	different_attri.assign_all(0)
 	x = sfix(0)
 	array = Array(14,sint)
 	shape_array = Array(10,sfix)
 	shape_array.assign_all(0)
 	gain = sfix(0.0)
+	biggest = sint.MemValue(1)
 	@for_range_opt(range)
 	def f(i):
 		compvar = examples[i][column_number]
 		lastvar = examples[i][3]
 		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
 
-		if((lastvar ==temp).reveal()):
-			shape_array[compvar.reveal()-1] = shape_array[compvar.reveal()-1] +1
+		lastint = (lastvar == temp)
 
-		if((attri_count < compvar).reveal()):
-			attri_count.write(compvar.reveal())
+		mover = sfix(1)*lastint
 
-	#print_ln('There are %s 1s, %s 2s,and %s 3 in the %s column',different_attri[0].reveal(),different_attri[1].reveal(),different_attri[2].reveal(), count)
+		shape_array[compvar.reveal()-1] = shape_array[compvar.reveal()-1] + mover
+
+		compint = sint(compvar)
+		tester = sint(biggest)
+		compint = (tester < compint).if_else(compint,tester)
+		biggest.write(compint)
+
+		if((sint(0) < sint(1)).reveal()):
+			skip = 0
 
 	#print_ln('attir count is %s',attri_count.reveal())
-
+	#print_ln('biggest is %s',biggest.reveal())
 	return_Array = Array(5,sfix)
 
-	@for_range_opt(attri_count.reveal())
+	@for_range_opt(biggest.reveal())
 	def W(i):
 		denom = different_attri[i]
 		#print_ln('%s',denom.reveal())
@@ -107,7 +117,7 @@ def sec_entropy(examples,column_array,Comparison_Entropy,column_number,range):
 		return_Array[i] = (-partone)+(-parttwo)
 		#print_ln('return_Array is %s',return_Array[i].reveal())
 
-	gain = get_gain(return_Array,attri_count.reveal(),Comparison_Entropy,different_attri,range)
+	gain = get_gain(return_Array,biggest.reveal(),Comparison_Entropy,different_attri,range)
 	print_ln('Gain is %s',gain.reveal())
 	return gain
 
