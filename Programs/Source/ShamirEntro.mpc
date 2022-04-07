@@ -9,6 +9,8 @@ import mpc_math
 #with it commented out the entro is now .940338
 
 
+
+
 def first_entropy(examples, count,range):
 	total = sfix.MemValue(0)
 	entropy = sfix.MemValue(0)
@@ -38,7 +40,7 @@ def first_entropy(examples, count,range):
 	@for_range_opt(biggest.reveal())
 	def W(i):
 		testing = different_attri[i]
-		x = testing/total
+		x = testing/sfix(total)
 		entropy.write(entropy -(x*(mpc_math.log2_fx(x))))
 
 	return entropy
@@ -54,7 +56,7 @@ def get_gain(EntroValue,attri_count,Comparison_Entropy,numerator,range):
 		#print_ln('Entropy is %s',EntroValue[i].reveal())
 		sum_of_Entro.write(((numerator[i]/range)*EntroValue[i])+ sum_of_Entro)
 	#print_ln('sum of entro is %s',sum_of_Entro.reveal())
-	gain = Comparison_Entropy - sum_of_Entro
+	gain = Comparison_Entropy - sfix(sum_of_Entro)
 
 	return gain
 
