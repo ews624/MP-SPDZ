@@ -10,7 +10,6 @@ import mpc_math
 
 
 
-
 def first_entropy(examples, count,range):
 	total = sfix.MemValue(0)
 	entropy = sfix.MemValue(0)
