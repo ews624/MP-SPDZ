@@ -7,26 +7,17 @@ def factorial(num,storage):
 
 		returnVal.write(x-1)
 		storage.write(storage * (x))
-		@if_e(storage >5000)
-		def _():
-			print_ln('large number')
-		@else_
-		def _():
-			print_ln('small number')
+		
 		#print_ln('current factorial is %s', storage)
 		#print_ln('x value is %s',x)
 		x.write(x-1)
 		return cint(returnVal)
+	return 77
 
-
-# change the value for a different result
 storage = regint.MemValue(1)
 num = 7
 
-# to take input from the user
-# num = int(input("Enter a number: "))
-
-# call the factorial function
 result = factorial(num,storage)
 
 print_ln('%s',storage)
+print_ln('%s',result)

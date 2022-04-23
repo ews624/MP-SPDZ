@@ -3,12 +3,34 @@ import mpc_math
 
 
 
-#sfix.set_precision(8,32)
+sfix.set_precision(16,32)
 #With above entro is .949219
 #Actually answer is .94
 #with it commented out the entro is now .940338
 
 
+## NOTE: DATA columns in order from left to right are
+# Color, Outline, Dot, Shape
+
+
+'''
+class Node:
+	def __init__(self,data):
+		self.left = None
+		self.right = None
+		self.data = data
+'''
+
+
+
+class Node:
+	def __init__(self):
+		self.children = []
+		self.value = ""
+		self.isLeaf = False
+		self.pred = ""
+
+#root = Node()
 
 def first_entropy(examples, count,range):
 	total = sfix.MemValue(0)
@@ -28,9 +50,6 @@ def first_entropy(examples, count,range):
 		tester  = sint(biggest)
 		compint = (tester < compint).if_else(compint,tester)
 		biggest.write(compint)
-
-		#bug comparison
-		#if removed function doesnt work later on
 		if((sint(0) < sint(1)).reveal()):
 			skip = 0
 
@@ -155,11 +174,15 @@ def fl(i):
 
 max_Initial_Entro = sfix.MemValue(0.0)
 f = sint(-1)
+
+#Find a Way to find the index value of biggest entropy
+maxindex = sint.MemValue(0)
 @for_range_opt(4)
 def fl(i):
 	f = (max_Initial_Entro < total_shamir_array[i])
+	maxindex.write((f*i) + (maxindex*(sint(1)-f)))
 	max_Initial_Entro.write( (total_shamir_array[i]*f)+ (max_Initial_Entro*(sint(1)-f)))
-
+print_ln('max index is %s',maxindex.reveal())
 
 print_ln('max_Initial_Entro is %s', max_Initial_Entro.reveal())
 
@@ -176,9 +199,99 @@ Comparison_Entropy = total_shamir_array[3]
 gain_array = Array(3,sfix)
 @for_range_opt(3)
 def gainAll(i):
-	gain_array= sec_entropy(shamir_input,column_array,Comparison_Entropy,i,42)
+	gain_array[i]= sec_entropy(shamir_input,column_array,Comparison_Entropy,i,42)
+
+#Build tree here
+#No  nodes if Entropy is small(like with Yellow squares)
 
 
+#Find Attribute with largest gain
+
+f = sint(-1)
+largestGain = sfix.MemValue(0.0)
+maxindex = sint.MemValue(0)
+@for_range_opt(3)
+def _(i):
+	f = (largestGain < gain_array[i])
+	maxindex.write((f*i)+ (maxindex*(sint(1)-f)))
+	largestGain.write((gain_array[i]*f)+ (largestGain*(sint(1)-f)))
+print_ln('largest gain index is %s which is %s',maxindex.reveal(),gain_array[maxindex.reveal()].reveal())
+
+root = Node()
+def first_layer_tree(maxindex,shamir_input):
+
+
+	yellow = sint.Matrix(42,4)
+	red = sint.Matrix(42,4)
+	green = sint.Matrix(42,4)
+
+	yellowCount = sint.MemValue(0)
+	redCount = sint.MemValue(0)
+	greenCount = sint.MemValue(0)
+
+	yellowTri = sint.MemValue(0)
+	redTri = sint.MemValue(0)
+	greenTri = sint.MemValue(0)
+
+
+
+	yellowEntro = sfix(0.0)
+	redEntro = sfix(0.0)
+	greenEntro = sfix(0.0)
+
+
+	column = maxindex.reveal()
+	@for_range_opt(42)
+	def _(i):
+		tester = shamir_input[i][column]
+		shape = shamir_input[i][3]
+		y = (sint(2)== tester)
+		r = (sint(3) == tester)
+		g = (sint(1)== tester)
+
+		yT = (y == shape)
+		rT = (r == shape)
+		gT = (g == shape)
+
+		yellowTri.write(yellowTri + yT)
+		redTri.write(redTri + rT)
+		greenTri.write(greenTri + gT)
+
+		yellowCount.write(yellowCount + y)
+		redCount.write(redCount + r)
+		greenCount.write(greenCount + g)
+
+	x = sfix(yellowTri/yellowCount)
+	print_ln('yellow tri is %s',yellowTri.reveal())
+	difference = (yellowCount - yellowTri)
+	y = sfix(difference/yellowCount)
+	ans = (-(x*mpc_math.log2_fx(x))-(y*mpc_math.log2_fx(y)))
+	yellowEntro = ans
+
+	x = sfix((redTri/redCount))
+	#print_ln('redtri is %s',redTri.reveal())
+	print_ln('x is %s',x.reveal())
+	print_ln('redcount is %s and redTri is %s',redCount.reveal(),redTri.reveal())
+	difference = (redCount - redTri)
+	print_ln('difference is %s',difference.reveal())
+	y = sfix(difference/redCount)
+	ans = sfix((-(x*mpc_math.log2_fx(x)))-(y*mpc_math.log2_fx(y)))
+	redEntro = ans
+
+	x = sfix(greenTri/greenCount)
+	print_ln('greentri is %s',greenTri.reveal())
+	difference = (greenCount-greenTri)
+	y = sfix(difference/greenCount )
+	ans = (-(x*mpc_math.log2_fx(x))-(y*mpc_math.log2_fx(y)))
+	greenEntro = ans
+
+	print_ln("amount of yellow is %s",yellowCount.reveal())
+	print_ln('yellow entropy is %s',yellowEntro.reveal())
+	print_ln('green entropy is %s',greenEntro.reveal())
+	print_ln('red entropy is %s',redEntro.reveal())
+	#find of color then next highest gain Attribute(outline)
+
+first_layer_tree(maxindex,shamir_input)
 '''
 
 print_ln('Color count of green is %s',second_color_array[0].reveal())
