@@ -1,58 +1,35 @@
 import math
 import mpc_math
 
-
-
 sfix.set_precision(16,32)
-#With above entro is .949219
-#Actually answer is .94
-#with it commented out the entro is now .940338
-
 
 ## NOTE: DATA columns in order from left to right are
 # Color, Outline, Dot, Shape
 
 
-'''
-class Node:
-	def __init__(self,data):
-		self.left = None
-		self.right = None
-		self.data = data
-'''
-
-
-
-class Node:
+class Tree:
 	def __init__(self):
-		self.children = []
-		self.value = ""
-		self.isLeaf = False
-		self.pred = ""
-
-#root = Node()
+		self.left = None
+		self.center = None
+		self.right = None
+		self.attribute = None
+		self.data = None
 
 def first_entropy(examples, count,range):
 	total = sfix.MemValue(0)
 	entropy = sfix.MemValue(0)
 	testing = sint(0)
-	different_attri = Array(10,sfix)
+	different_attri = Array(3,sfix)
 	different_attri.assign_all(0)
 	x = sfix(0)
-	skip = 0
 	biggest = sint.MemValue(0)
 	@for_range_opt(range)
 	def f(i):
 		compvar = examples[i][count]
 		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
 
-		compint = sint(compvar)
-		tester  = sint(biggest)
-		compint = (tester < compint).if_else(compint,tester)
-		biggest.write(compint)
-		if((sint(0) < sint(1)).reveal()):
-			skip = 0
-
+		f = (biggest < compvar)
+		biggest.write((compvar*f)+(biggest*(sint(1)-f)))
 		total.write(total+1)
 
 	@for_range_opt(biggest.reveal())
@@ -64,32 +41,25 @@ def first_entropy(examples, count,range):
 	return entropy
 
 
-
 def get_gain(EntroValue,attri_count,Comparison_Entropy,numerator,range):
 
 	sum_of_Entro = sfix.MemValue(0.0)
 	@for_range_opt(attri_count)
 	def tr(i):
-		#print_ln('numerator is %s',numerator[i].reveal())
-		#print_ln('Entropy is %s',EntroValue[i].reveal())
 		sum_of_Entro.write(((numerator[i]/range)*EntroValue[i])+ sum_of_Entro)
-	#print_ln('sum of entro is %s',sum_of_Entro.reveal())
 	gain = Comparison_Entropy - sfix(sum_of_Entro)
 
 	return gain
 
-
-def sec_entropy(examples,column_array,Comparison_Entropy,column_number,range):
+def sec_entropy(examples,Comparison_Entropy,column_number,range):
 	different_attri = Array(10,sfix)
 	temp = sint(1)
 	lastint = sint(0)
-	skip = 0
 	mover = sfix(0.0)
-	#attri_count = sint.MemValue(1)
 	different_attri.assign_all(0)
 	x = sfix(0)
 	array = Array(14,sint)
-	shape_array = Array(10,sfix)
+	shape_array = Array(3,sfix)
 	shape_array.assign_all(0)
 	gain = sfix(0.0)
 	biggest = sint.MemValue(1)
@@ -100,32 +70,21 @@ def sec_entropy(examples,column_array,Comparison_Entropy,column_number,range):
 		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
 
 		lastint = (lastvar == temp)
-
-		mover = sfix(1)*lastint
+		mover = sfix(lastint)
 
 		shape_array[compvar.reveal()-1] = shape_array[compvar.reveal()-1] + mover
 
-		compint = sint(compvar)
-		tester = sint(biggest)
-		compint = (tester < compint).if_else(compint,tester)
-		biggest.write(compint)
+		f = (biggest < compvar)
+		biggest.write((compvar*f)+(biggest*(sint(1)-f)))
 
-		if((sint(0) < sint(1)).reveal()):
-			skip = 0
-
-	#print_ln('attir count is %s',attri_count.reveal())
-	#print_ln('biggest is %s',biggest.reveal())
-	return_Array = Array(5,sfix)
+	return_Array = Array(3,sfix)
 
 	@for_range_opt(biggest.reveal())
 	def W(i):
 		denom = different_attri[i]
-		#print_ln('%s',denom.reveal())
-		column_array[i] = denom
+
 		top = shape_array[i]
-		#print_ln('shape array is %s',top.reveal())
 		x = top/denom
-		#print_ln('x is %s',x.reveal())
 
 		rest = denom-top
 		rest = rest/denom
@@ -141,89 +100,58 @@ def sec_entropy(examples,column_array,Comparison_Entropy,column_number,range):
 	print_ln('Gain is %s',gain.reveal())
 	return gain
 
-p0_inputs = sint.Matrix(14,4)
-p0_inputs.input_from(0)
+def gainChecker(squares,triangles,totalofColor):
+	latestEntro = sfix.MemValue(0.0)
+	print_ln('in gainchecker num of squares is %s,triangles %s',squares.reveal(),triangles.reveal())
 
-p1_inputs = sint.Matrix(14,4)
-p1_inputs.input_from(1)
-
-p2_inputs = sint.Matrix(14,4)
-p2_inputs.input_from(2)
-
-
-shamir_input = sint.Matrix(42,4)
-
-@for_range_parallel(3,[14,4])
-def hi(i,j):
-	shamir_input[i][j] = p0_inputs[i][j]
-	shamir_input[i+14][j] = p1_inputs[i][j]
-	shamir_input[i+28][j] = p2_inputs[i][j]
+	squares = sfix(squares)
+	triangles = sfix(triangles)
+	totalofColor = sfix(totalofColor)
+	x = sfix(squares/totalofColor)
+	y = sfix(triangles/totalofColor)
+	latestEntro = (-(x*mpc_math.log2_fx(x))-(y*(mpc_math.log2_fx(y))))
+	print_ln('latestEntro is %s',latestEntro.reveal())
 
 
 
-EntroArray = Array(4,sfix)
-first_shamir_array = Array(4,sfix)
-total_shamir_array = Array(4,sfix)
-@for_range_opt(4)
-def fl(i):
-	#EntroArray[i] = first_entropy(p0_inputs,i,14)
-	total_shamir_array[i] = first_entropy(shamir_input,i,42)
-	print_ln('Total shamir array is %s', total_shamir_array[i].reveal())
-	#print_ln('Normal Entropy is %s',EntroArray[i].reveal())
+def nodeGetter(range,allEntro,root,shamir_input,ColorInt):
+	f = sint(-1)
+	smallestEntro = sfix.MemValue(10.0)
+	smallestindex = sint.MemValue(100)
+	print_ln('')
 
+	@for_range_opt(3)
+	def _(i):
+		f = (smallestEntro > allEntro[i])
+		smallestindex.write((f*i)+ (smallestindex*(sint(1)-f)))
+		smallestEntro.write((allEntro[i]*f)+ (smallestEntro*(sint(1)-f)))
+		#print_ln('smallestEntro is %s, allEntro is %s',smallestEntro.reveal(),allEntro[i].reveal())
+	print_ln('smallest index is %s which is %s',smallestindex.reveal(),allEntro[smallestindex.reveal()].reveal())
+	root.left = Tree()
 
-max_Initial_Entro = sfix.MemValue(0.0)
-f = sint(-1)
+	#yellow = 2
+	#green = 1
+	#red = 3
+	squares = sint.MemValue(0)
+	triangles = sint.MemValue(0)
+	totalcolor = sint.MemValue(0)
 
-#Find a Way to find the index value of biggest entropy
-maxindex = sint.MemValue(0)
-@for_range_opt(4)
-def fl(i):
-	f = (max_Initial_Entro < total_shamir_array[i])
-	maxindex.write((f*i) + (maxindex*(sint(1)-f)))
-	max_Initial_Entro.write( (total_shamir_array[i]*f)+ (max_Initial_Entro*(sint(1)-f)))
-print_ln('max index is %s',maxindex.reveal())
+	@for_range_opt(42)
+	def _(j):
+		f = (ColorInt ==shamir_input[j][0])
+		totalcolor.write(((totalcolor+1)*f)+(totalcolor*(sint(1)-f)))
+		l = (sint(2) == shamir_input[j][3])
+		squares.write(squares + (f*l))
+		l = (sint(1) == shamir_input[j][3])
+		triangles.write(triangles+(l*f))
 
-print_ln('max_Initial_Entro is %s', max_Initial_Entro.reveal())
+	gainChecker(squares,triangles,totalcolor)
+	root.left.data = smallestEntro.reveal()
+	print_ln('root left data is %s',root.left.data)
 
+	return smallestindex
 
-#### Need to work on everything after this comment
-
-
-column_array = Array(3,sfix)
-
-
-Comparison_Entropy = total_shamir_array[3]
-
-
-gain_array = Array(3,sfix)
-@for_range_opt(3)
-def gainAll(i):
-	gain_array[i]= sec_entropy(shamir_input,column_array,Comparison_Entropy,i,42)
-
-#Build tree here
-#No  nodes if Entropy is small(like with Yellow squares)
-
-
-#Find Attribute with largest gain
-
-f = sint(-1)
-largestGain = sfix.MemValue(0.0)
-maxindex = sint.MemValue(0)
-@for_range_opt(3)
-def _(i):
-	f = (largestGain < gain_array[i])
-	maxindex.write((f*i)+ (maxindex*(sint(1)-f)))
-	largestGain.write((gain_array[i]*f)+ (largestGain*(sint(1)-f)))
-print_ln('largest gain index is %s which is %s',maxindex.reveal(),gain_array[maxindex.reveal()].reveal())
-
-root = Node()
 def first_layer_tree(maxindex,shamir_input):
-
-
-	yellow = sint.Matrix(42,4)
-	red = sint.Matrix(42,4)
-	green = sint.Matrix(42,4)
 
 	yellowCount = sint.MemValue(0)
 	redCount = sint.MemValue(0)
@@ -234,11 +162,11 @@ def first_layer_tree(maxindex,shamir_input):
 	greenTri = sint.MemValue(0)
 
 
-
 	yellowEntro = sfix(0.0)
 	redEntro = sfix(0.0)
 	greenEntro = sfix(0.0)
 
+	allEntro = Array(3,sfix)
 
 	column = maxindex.reveal()
 	@for_range_opt(42)
@@ -261,69 +189,157 @@ def first_layer_tree(maxindex,shamir_input):
 		redCount.write(redCount + r)
 		greenCount.write(greenCount + g)
 
-	x = sfix(yellowTri/yellowCount)
-	print_ln('yellow tri is %s',yellowTri.reveal())
-	difference = (yellowCount - yellowTri)
-	y = sfix(difference/yellowCount)
+	top = sfix(yellowTri)
+	bot = sfix(yellowCount)
+
+	x = sfix(top/bot)
+	difference = (bot - top)
+	y = sfix(difference/bot)
 	ans = (-(x*mpc_math.log2_fx(x))-(y*mpc_math.log2_fx(y)))
 	yellowEntro = ans
 
-	x = sfix((redTri/redCount))
-	#print_ln('redtri is %s',redTri.reveal())
-	print_ln('x is %s',x.reveal())
-	print_ln('redcount is %s and redTri is %s',redCount.reveal(),redTri.reveal())
-	difference = (redCount - redTri)
-	print_ln('difference is %s',difference.reveal())
-	y = sfix(difference/redCount)
-	ans = sfix((-(x*mpc_math.log2_fx(x)))-(y*mpc_math.log2_fx(y)))
+
+	top = sfix(redTri)
+	bot = sfix(redCount)
+
+	x = sfix(top/bot)
+	difference = (bot- top)
+	y = sfix(difference/bot)
+	ans = sfix((-(x*mpc_math.log2_fx(x)))+(-(y*mpc_math.log2_fx(y))))
 	redEntro = ans
 
-	x = sfix(greenTri/greenCount)
-	print_ln('greentri is %s',greenTri.reveal())
-	difference = (greenCount-greenTri)
-	y = sfix(difference/greenCount )
-	ans = (-(x*mpc_math.log2_fx(x))-(y*mpc_math.log2_fx(y)))
+	top = sfix(greenTri)
+	bot = sfix(greenCount)
+
+	x = sfix(top/bot)
+	difference = (bot-top)
+	y = sfix(difference/bot)
+	ans = (-(x*(mpc_math.log2_fx(x)))-(y*(mpc_math.log2_fx(y))))
 	greenEntro = ans
 
+	allEntro[0] = yellowEntro
+	allEntro[1] = redEntro
+	allEntro[2] = greenEntro
+
+	root = Tree()
+	root.data = 'Color'
+
+
+	smallestindex = sint(0)
+	smallestindex  =nodeGetter(range,allEntro,root,shamir_input,2)
+
+
+
+	loopArray = Array(3,sfix)
+	@for_range_opt(3)
+	def _(t):
+		f = (t == smallestindex).if_else(sfix(9.0),allEntro[t])
+		loopArray[t] = f
+
+	print_ln('loopArray at 0 is %s',loopArray[0].reveal())
+	print_ln("root data is %s",root.data)
+	print_ln("root data.left is %s",root.left.data)
+
+	root.right = Tree()
+	#for red
+	smallestindex  =nodeGetter(range,loopArray,root.right,shamir_input,3)
+
+
+	newArray = Array(3,sfix)
+
+
+
+	@for_range_opt(3)
+	def _(t):
+		f = (t == smallestindex).if_else(sfix(9.0),loopArray[t])
+		newArray[t] = f
+	#print_ln('root left data is %s',root.right.left.data)
+
+	newArray[smallestindex.reveal()] = sfix(9.0)
+
+	newestArray = Array(3,sfix)
+	newestArray[0] = newArray[0]
+	newestArray[1] = sfix(9.0)
+	newestArray[2] = newArray[2]
+
+	#print_ln('allentro at index 1 is %s and index 2 is %s',Entro[1].reveal(),allEntro[2].reveal())
+	print_ln("Root right left data is %s",root.right.left.data)
+
+	root.right.right = Tree()
+
+	smallestindex  =nodeGetter(range,newArray,root.right.right,shamir_input,1)
+
+	root.right.right.left.attribute = "Green"
+	print_ln("Root right right left data is %s",root.right.right.left.data)
+	print_ln("Root right right left attribute is %s",root.right.right.left.attribute)
+
+
+	#print_ln('smallestEntro is %s',smallestEntro.reveal())
 	print_ln("amount of yellow is %s",yellowCount.reveal())
 	print_ln('yellow entropy is %s',yellowEntro.reveal())
 	print_ln('green entropy is %s',greenEntro.reveal())
 	print_ln('red entropy is %s',redEntro.reveal())
+
 	#find of color then next highest gain Attribute(outline)
 
+
+p0_inputs = sint.Matrix(14,4)
+p0_inputs.input_from(0)
+
+p1_inputs = sint.Matrix(14,4)
+p1_inputs.input_from(1)
+
+p2_inputs = sint.Matrix(14,4)
+p2_inputs.input_from(2)
+
+shamir_input = sint.Matrix(42,4)
+
+@for_range_parallel(3,[14,4])
+def hi(i,j):
+	shamir_input[i][j] = p0_inputs[i][j]
+	shamir_input[i+14][j] = p1_inputs[i][j]
+	shamir_input[i+28][j] = p2_inputs[i][j]
+
+
+EntroArray = Array(4,sfix)
+total_shamir_array = Array(4,sfix)
+@for_range_opt(4)
+def fl(i):
+	total_shamir_array[i] = first_entropy(shamir_input,i,42)
+	print_ln('Total shamir array is %s', total_shamir_array[i].reveal())
+
+
+max_Initial_Entro = sfix.MemValue(0.0)
+f = sint(-1)
+
+maxindex = sint.MemValue(0)
+@for_range_opt(4)
+def fl(i):
+	f = (max_Initial_Entro < total_shamir_array[i])
+	maxindex.write((f*i) + (maxindex*(sint(1)-f)))
+	max_Initial_Entro.write( (total_shamir_array[i]*f)+ (max_Initial_Entro*(sint(1)-f)))
+print_ln('max index is %s which is %s',maxindex.reveal(),max_Initial_Entro.reveal())
+
+Comparison_Entropy = total_shamir_array[3]
+
+gain_array = Array(3,sfix)
+@for_range_opt(3)
+def gainAll(i):
+	gain_array[i]= sec_entropy(shamir_input,Comparison_Entropy,i,42)
+
+
+
+f = sint(-1)
+largestGain = sfix.MemValue(0.0)
+maxindex = sint.MemValue(0)
+@for_range_opt(3)
+def _(i):
+	f = (largestGain < gain_array[i])
+	maxindex.write((f*i)+ (maxindex*(sint(1)-f)))
+	largestGain.write((gain_array[i]*f)+ (largestGain*(sint(1)-f)))
+print_ln('largest gain index is %s which is %s',maxindex.reveal(),gain_array[maxindex.reveal()].reveal())
+
+print_ln('')
+print_ln('')
+print_ln('')
 first_layer_tree(maxindex,shamir_input)
-'''
-
-print_ln('Color count of green is %s',second_color_array[0].reveal())
-
-total_rows = second_color_array[0] + second_color_array[1] + second_color_array[2]
-
-
-
-
-
-sum_of_Entro = ((second_color_array[0]/total_rows)*second_entro_array[0]) + ((second_color_array[1]/total_rows)*second_entro_array[1]) + ((second_color_array[2]/total_rows)*second_entro_array[2])
-
-print_ln('the sum of the entros is %s',  sum_of_Entro.reveal())
-
-
-gain = EntroArray[-1] - sum_of_Entro
-print_ln('Gain for color is %s', gain.reveal())
-
-
-
-second_array = Array(3,sfix)
-outline_entro_array =  sec_entropy(p0_inputs,second_array,1,42)
-
-sum_of_Entro = ((second_array[0]/total_rows)*outline_entro_array[0]) + ((second_array[1]/total_rows)*outline_entro_array[1])
-
-gain = EntroArray[-1] - sum_of_Entro
-print_ln('Gain for outline is %s', gain.reveal())
-
-
-second_array.assign_all(0)
-dot_entro_array = sec_entropy(p0_inputs,second_array,2,42)
-sum_of_Entro = ((second_array[0]/total_rows)*dot_entro_array[0]) + ((second_array[1]/total_rows)*dot_entro_array[1])
-gain = EntroArray[-1] - sum_of_Entro
-print_ln('Gain for dot is %s', gain.reveal())
-'''
