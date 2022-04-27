@@ -55,11 +55,12 @@ def sec_entropy(examples,Comparison_Entropy,column_number,range):
 	different_attri = Array(10,sfix)
 	temp = sint(1)
 	lastint = sint(0)
+	skip = 0
 	mover = sfix(0.0)
 	different_attri.assign_all(0)
 	x = sfix(0)
 	array = Array(14,sint)
-	shape_array = Array(3,sfix)
+	shape_array = Array(10,sfix)
 	shape_array.assign_all(0)
 	gain = sfix(0.0)
 	biggest = sint.MemValue(1)
@@ -76,6 +77,9 @@ def sec_entropy(examples,Comparison_Entropy,column_number,range):
 
 		f = (biggest < compvar)
 		biggest.write((compvar*f)+(biggest*(sint(1)-f)))
+
+		if((sint(0) < sint(1)).reveal()):
+			skip = 0
 
 	return_Array = Array(3,sfix)
 
