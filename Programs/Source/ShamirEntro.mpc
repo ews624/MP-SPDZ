@@ -125,7 +125,7 @@ def gainChecker(squares,triangles,totalofColor,root,shamir_input,ColorInt):
 	@for_range_opt(42)
 	def _(i):
 
-		colorCheck = (shamir_input[i][3]== color)
+		colorCheck = (shamir_input[i][0]== color)
 		f = (sint(1)==shamir_input[i][2])
 		f = (f*colorCheck)
 		totaldots.write(totaldots+f)
@@ -139,15 +139,14 @@ def gainChecker(squares,triangles,totalofColor,root,shamir_input,ColorInt):
 	print_ln('totaldashed is %s',totaldashed.reveal())
 
 
-	total=(total==0).if_else(1,total)
 	x = sfix(totaldots/total)
 	mid = sfix(sfix(total)-sfix(totaldots))
-	y = sfix(mid/total)
+	y = sfix(mid/sfix(total))
 	entroOne = (-(x*mpc_math.log2_fx(x))-(y*(mpc_math.log2_fx(y))))
 
 	x = sfix(totaldashed/total)
 	mid = sfix(sfix(total)-sfix(totaldashed))
-	y = sfix(mid/total)
+	y = sfix(mid/sfix(total))
 	entrotwo = (-(x*mpc_math.log2_fx(x))-(y*(mpc_math.log2_fx(y))))
 
 	entroOne = latestEntro - entroOne
