@@ -118,40 +118,127 @@ def gainChecker(squares,triangles,totalofColor,root,shamir_input,ColorInt):
 	latestEntro = (-(x*mpc_math.log2_fx(x))-(y*(mpc_math.log2_fx(y))))
 	print_ln('latestEntro is %s',latestEntro.reveal())
 	totaldots = sint.MemValue(0)
+	totalundotted = sint.MemValue(0)
 	totaldashed = sint.MemValue(0)
+	totalundashed = sint.MemValue(0)
 	total = sfix.MemValue(0)
 	color = sint(ColorInt)
+
+	dashedTri = sint.MemValue(0)
+	solidTri = sint.MemValue(0)
+	dottedTri = sint.MemValue(0)
+	undotTri = sint.MemValue(0)
+	totalTri = sint.MemValue(0)
+
+	dashedSqu = sint.MemValue(0)
+	solidSqu = sint.MemValue(0)
+	dottedSqu = sint.MemValue(0)
+	undotSqu = sint.MemValue(0)
+	totalSqu = sint.MemValue(0)
 	#create deeper nodes
 	@for_range_opt(42)
 	def _(i):
 
 		colorCheck = (shamir_input[i][0]== color)
+		triCheck = (shamir_input[i][3] == sint(1))
+		totalTri.write(totalTri+(colorCheck*triCheck))
+		totalSqu.write(totalSqu+(colorCheck*(sint(1)-triCheck)))
+
 		f = (sint(1)==shamir_input[i][2])
-		f = (f*colorCheck)
-		totaldots.write(totaldots+f)
+		dottedTri.write(dottedTri+(colorCheck*f*triCheck))
+		dottedSqu.write(dottedSqu+(colorCheck*f*(sint(1)-triCheck)))
+
+		undotTri.write(undotTri+(colorCheck*(sint(1)-f)*triCheck))
+		undotSqu.write(undotSqu+(colorCheck*(sint(1)-f)*(sint(1)-triCheck)))
+
+		da = (sint(1)==shamir_input[i][1])
+		dashedTri.write(dashedTri+(colorCheck*da*triCheck))
+		dashedSqu.write(dashedSqu+(colorCheck*(sint(1)-triCheck)*da))
+
+		solidTri.write(solidTri+(colorCheck*(sint(1)-da)*triCheck))
+		solidSqu.write(solidSqu+(colorCheck*(sint(1)-da)*(sint(1)-triCheck)))
+
+
+		f = (sint(1)==shamir_input[i][2])
+		l = (f*colorCheck)
+		totaldots.write(totaldots+l)
+		l = (sint(1)-f)*colorCheck
+		totalundotted.write(totalundotted+l)
+
 		f = (sint(1)==shamir_input[i][1])
-		f = (f*colorCheck)
-		totaldashed.write(totaldashed+f)
+		l = (f*colorCheck)
+		totaldashed.write(totaldashed+l)
+		f = (sint(1)-f)*colorCheck
+		totalundashed.write(totalundashed+f)
 
 		total.write(total+colorCheck)
+	print_ln('total tri is %s and total squ is %s',totalTri.reveal(),totalSqu.reveal())
+	print_ln('total tri dot is %s and total squ dot is %s',dottedTri.reveal(),dottedSqu.reveal())
+	print_ln('total tri dash is %s and total squ dash is %s',dashedTri.reveal(),dashedSqu.reveal())
 
-	print_ln('totaldots is %s',totaldots.reveal())
+	print_ln('totaldots is %s and undotted is %s',totaldots.reveal(), totalundotted.reveal())
+
 	print_ln('totaldashed is %s',totaldashed.reveal())
 
 
-	x = sfix(totaldots/total)
-	mid = sfix(sfix(total)-sfix(totaldots))
-	y = sfix(mid/sfix(total))
-	entroOne = (-(x*mpc_math.log2_fx(x))-(y*(mpc_math.log2_fx(y))))
+	outlineX = sfix(dashedTri)
+	outlineBot = sfix(dashedTri+dashedSqu)
 
-	x = sfix(totaldashed/total)
-	mid = sfix(sfix(total)-sfix(totaldashed))
-	y = sfix(mid/sfix(total))
-	entrotwo = (-(x*mpc_math.log2_fx(x))-(y*(mpc_math.log2_fx(y))))
+	outlineY = sfix(dashedSqu)
+
+	x = sfix(outlineX/outlineBot)
+	y = sfix(outlineY/outlineBot)
+	partone = -(x*mpc_math.log2_fx(x))
+	parttwo = -(y*mpc_math.log2_fx(y))
+	entroOne = (partone+parttwo)
+	print_ln('entroOne is %s',entroOne.reveal())
+	print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
+	totalItems = totalTri + totalSqu
+	allSolid = solidTri + solidSqu
+	allDashed = dashedSqu + dashedTri
+	print_ln('total items is %s and allsolids is %s',totalItems.reveal(),allSolid.reveal())
+	print_ln('all dashed is %s',allDashed.reveal())
+
+	x = sfix(allSolid/totalItems)
+	y = sfix(allDashed/totalItems)
+
+
+	dottedX = sfix(dottedTri)
+	dottedBot = sfix(dottedTri+dottedSqu)
+	dottedY = sfix(dottedSqu)
+	x =sfix(dottedX/dottedBot)
+	y = sfix(dottedY/dottedBot)
+	partone = -(x*mpc_math.log2_fx(x))
+	parttwo = -(y*mpc_math.log2_fx(y))
+	entrotwo = (partone+parttwo)
+	print_ln('entrotwo is %s',entrotwo.reveal())
+	print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
+	'''
+	top = sfix(totaldots)
+
+	print_ln('total is %s',total.reveal())
+
+	x = sfix(top/bot)
+	y = sfix(totalundotted)
+	y = sfix(y/bot)
+	print_ln('x is %s and y is %s',x.reveal(),y.reveal())
+	partone = -(x*mpc_math.log2_fx(x))
+	parttwo = -(y*mpc_math.log2_fx(y))
+	entroOne = (partone+parttwo)
+	print_ln('entroOne is %s',entroOne.reveal())
+
+	bot = sfix(total)
+	top = sfix(totaldashed)
+	x = sfix(top/bot)
+	difference = sfix(totalundashed)
+	y = sfix(difference/bot)
+	partone = (-(x*mpc_math.log2_fx(x)))
+	parttwo = (y*(mpc_math.log2_fx(y)))
+	entrotwo = (partone-parttwo)
 
 	entroOne = latestEntro - entroOne
 	entrotwo = latestEntro - entrotwo
-
+		'''
 	f = (entroOne > entrotwo)
 	mover = ((f*entroOne)+(entrotwo*(1-f)))
 	root.center.data = mover.reveal()
@@ -310,8 +397,6 @@ def first_layer_tree(maxindex,shamir_input):
 	newestArray[1] = sfix(9.0)
 	newestArray[2] = newArray[2]
 
-	#print_ln('allentro at index 1 is %s and index 2 is %s',Entro[1].reveal(),allEntro[2].reveal())
-	print_ln("Root center left data is %s",root.center.left.data)
 
 	root.right = Tree()
 
@@ -319,11 +404,8 @@ def first_layer_tree(maxindex,shamir_input):
 
 	root.right.left.attribute = "Green"
 	print_ln("Root right left data is %s",root.right.left.data)
-	print_ln("Root right left attribute is %s",root.right.left.attribute)
 
 
-	#print_ln('smallestEntro is %s',smallestEntro.reveal())
-	print_ln("amount of yellow is %s",yellowCount.reveal())
 	print_ln('yellow entropy is %s',yellowEntro.reveal())
 	print_ln('green entropy is %s',greenEntro.reveal())
 	print_ln('red entropy is %s',redEntro.reveal())
