@@ -43,13 +43,11 @@ def first_entropy(examples, count,range):
 
 
 def get_gain(EntroValue,attri_count,Comparison_Entropy,numerator,range):
-
 	sum_of_Entro = sfix.MemValue(0.0)
 	@for_range_opt(attri_count)
 	def tr(i):
 		sum_of_Entro.write(((numerator[i]/range)*EntroValue[i])+ sum_of_Entro)
 	gain = Comparison_Entropy - sfix(sum_of_Entro)
-
 	return gain
 
 def sec_entropy(examples,Comparison_Entropy,column_number,range):
@@ -57,24 +55,49 @@ def sec_entropy(examples,Comparison_Entropy,column_number,range):
 	temp = sint(1)
 	lastint = sint(0)
 	skip = 0
-	mover = sfix(0.0)
 	different_attri.assign_all(0)
 	x = sfix(0)
 	array = Array(14,sint)
 	shape_array = Array(10,sfix)
 	shape_array.assign_all(0)
+
+	triangles = sint.MemValue(0)
+	squares = sint.MemValue(0)
+
+	onevar = sint.MemValue(0)
+	twovar = sint.MemValue(0)
+	threevar = sint.MemValue(0)
+
+	oneshape = sint.MemValue(0)
+	twoshape = sint.MemValue(0)
+	threeshape = sint.MemValue(0)
+
 	gain = sfix(0.0)
 	biggest = sint.MemValue(1)
 	@for_range_opt(range)
 	def f(i):
 		compvar = examples[i][column_number]
 		lastvar = examples[i][3]
-		different_attri[compvar.reveal()-1] =  different_attri[compvar.reveal()-1] +1
+
+		f = (compvar == sint(1))
+		onevar.write(((onevar+1)*f)+  ((sint(1)-f)*onevar))
+		f = (compvar == sint(2))
+		twovar.write(((twovar+1)*f) +((sint(1)-f)*twovar))
+		f = (compvar == sint(3))
+		threevar.write(((threevar+1)*f)+((sint(1)-f)*threevar))
 
 		lastint = (lastvar == temp)
-		mover = sfix(lastint)
 
-		shape_array[compvar.reveal()-1] = shape_array[compvar.reveal()-1] + mover
+		f = (compvar == sint(1))
+		oneshape.write(((oneshape+lastint)*f)+  ((sint(1)-f)*oneshape))
+		f = (compvar == sint(2))
+		twoshape.write(((twoshape+lastint)*f) +((sint(1)-f)*twoshape))
+		f = (compvar == sint(3))
+		threeshape.write(((threeshape+lastint)*f)+((sint(1)-f)*threeshape))
+
+		f = (lastvar == sint(1))
+		triangles.write(triangles+f)
+		squares.write(squares+(sint(1)-f))
 
 		f = (biggest < compvar)
 		biggest.write((compvar*f)+(biggest*(sint(1)-f)))
@@ -82,24 +105,27 @@ def sec_entropy(examples,Comparison_Entropy,column_number,range):
 		if((sint(0) < sint(1)).reveal()):
 			skip = 0
 
+
 	return_Array = Array(3,sfix)
+	different_attri[0] = onevar
+	different_attri[1] = twovar
+	different_attri[2] = threevar
+
+	shape_array[0] = oneshape
+	shape_array[1] = twoshape
+	shape_array[2] = threeshape
 
 	@for_range_opt(biggest.reveal())
 	def W(i):
 		denom = different_attri[i]
-
 		top = shape_array[i]
-		x = top/denom
 
-		rest = denom-top
-		rest = rest/denom
-		#print_ln('rest is %s',rest.reveal())
+		x = top/denom
+		difference = denom-top
+		y = difference/denom
 		partone = (x*mpc_math.log2_fx(x))
-		#print_ln('partone is %s',partone.reveal())
-		parttwo = (rest*mpc_math.log2_fx(rest))
-		#print_ln('parttwo is %s',parttwo.reveal())
+		parttwo = (y*mpc_math.log2_fx(y))
 		return_Array[i] = (-partone)+(-parttwo)
-		#print_ln('return_Array is %s',return_Array[i].reveal())
 
 	gain = get_gain(return_Array,biggest.reveal(),Comparison_Entropy,different_attri,range)
 	print_ln('Gain is %s',gain.reveal())
