@@ -135,7 +135,7 @@ def gainChecker(squares,triangles,totalofColor,root,shamir_input,ColorInt):
 	x = sfix(squares/totalofColor)
 	y = sfix(triangles/totalofColor)
 	latestEntro = (-(x*mpc_math.log2_fx(x))-(y*(mpc_math.log2_fx(y))))
-	print_ln('latestEntro is %s',latestEntro.reveal())
+	#print_ln('latestEntro is %s',latestEntro.reveal())
 	totaldots = sint.MemValue(0)
 	totalundotted = sint.MemValue(0)
 	totaldashed = sint.MemValue(0)
@@ -191,6 +191,7 @@ def gainChecker(squares,triangles,totalofColor,root,shamir_input,ColorInt):
 		totalundashed.write(totalundashed+f)
 
 		total.write(total+colorCheck)
+	'''
 	print_ln('total tri is %s and total squ is %s',totalTri.reveal(),totalSqu.reveal())
 	print_ln('total tri dot is %s and total squ dot is %s',dottedTri.reveal(),dottedSqu.reveal())
 	print_ln('total tri dash is %s and total squ dash is %s',dashedTri.reveal(),dashedSqu.reveal())
@@ -198,7 +199,7 @@ def gainChecker(squares,triangles,totalofColor,root,shamir_input,ColorInt):
 	print_ln('totaldots is %s and undotted is %s',totaldots.reveal(), totalundotted.reveal())
 
 	print_ln('totaldashed is %s',totaldashed.reveal())
-
+	'''
 
 	outlineX = sfix(dashedTri)
 	outlineBot = sfix(dashedTri+dashedSqu)
@@ -232,32 +233,7 @@ def gainChecker(squares,triangles,totalofColor,root,shamir_input,ColorInt):
 	entrotwo = (partone+parttwo)
 	print_ln('entrotwo is %s',entrotwo.reveal())
 	print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
-	'''
-	top = sfix(totaldots)
 
-	print_ln('total is %s',total.reveal())
-
-	x = sfix(top/bot)
-	y = sfix(totalundotted)
-	y = sfix(y/bot)
-	print_ln('x is %s and y is %s',x.reveal(),y.reveal())
-	partone = -(x*mpc_math.log2_fx(x))
-	parttwo = -(y*mpc_math.log2_fx(y))
-	entroOne = (partone+parttwo)
-	print_ln('entroOne is %s',entroOne.reveal())
-
-	bot = sfix(total)
-	top = sfix(totaldashed)
-	x = sfix(top/bot)
-	difference = sfix(totalundashed)
-	y = sfix(difference/bot)
-	partone = (-(x*mpc_math.log2_fx(x)))
-	parttwo = (y*(mpc_math.log2_fx(y)))
-	entrotwo = (partone-parttwo)
-
-	entroOne = latestEntro - entroOne
-	entrotwo = latestEntro - entrotwo
-		'''
 	f = (entroOne > entrotwo)
 	mover = ((f*entroOne)+(entrotwo*(1-f)))
 	root.center.data = mover.reveal()
@@ -278,8 +254,8 @@ def nodeGetter(range,allEntro,root,shamir_input,ColorInt):
 		f = (smallestEntro > allEntro[i])
 		smallestindex.write((f*i)+ (smallestindex*(sint(1)-f)))
 		smallestEntro.write((allEntro[i]*f)+ (smallestEntro*(sint(1)-f)))
-		#print_ln('smallestEntro is %s, allEntro is %s',smallestEntro.reveal(),allEntro[i].reveal())
-	print_ln('smallest index is %s which is %s',smallestindex.reveal(),allEntro[smallestindex.reveal()].reveal())
+
+	#print_ln('smallest index is %s which is %s',smallestindex.reveal(),allEntro[smallestindex.reveal()].reveal())
 	root.left = Tree()
 
 	#yellow = 2
@@ -300,9 +276,11 @@ def nodeGetter(range,allEntro,root,shamir_input,ColorInt):
 
 	gainChecker(squares,triangles,totalcolor,root,shamir_input,ColorInt)
 	root.left.data = smallestEntro.reveal()
+	'''
 	print_ln('root left data is %s',root.left.data)
 	print_ln('root center data is %s',root.center.data)
 	print_ln('root right data is %s',root.right.data)
+	'''
 	return smallestindex
 
 def first_layer_tree(maxindex,shamir_input):
@@ -375,6 +353,12 @@ def first_layer_tree(maxindex,shamir_input):
 	allEntro[1] = redEntro
 	allEntro[2] = greenEntro
 
+
+	print_ln('yellow entropy is %s',yellowEntro.reveal())
+	print_ln('green entropy is %s',greenEntro.reveal())
+	print_ln('red entropy is %s',redEntro.reveal())
+
+
 	root = Tree()
 	root.data = 'Color'
 
@@ -389,19 +373,17 @@ def first_layer_tree(maxindex,shamir_input):
 	def _(t):
 		f = (t == smallestindex).if_else(sfix(9.0),allEntro[t])
 		loopArray[t] = f
-
-	print_ln('loopArray at 0 is %s',loopArray[0].reveal())
-	print_ln("root data is %s",root.data)
-	print_ln("root left data is %s",root.left.data)
-
+	'''
+	print_ln('loopArray at index 0 is %s',loopArray[0].reveal())
+	print_ln("root.data is %s",root.data)
+	print_ln("root.left.data is %s",root.left.data)
+	'''
 	root.center = Tree()
 	#for red
 	smallestindex  =nodeGetter(range,loopArray,root.center,shamir_input,3)
 
 
 	newArray = Array(3,sfix)
-
-
 
 	@for_range_opt(3)
 	def _(t):
@@ -425,11 +407,7 @@ def first_layer_tree(maxindex,shamir_input):
 	print_ln("Root right left data is %s",root.right.left.data)
 
 
-	print_ln('yellow entropy is %s',yellowEntro.reveal())
-	print_ln('green entropy is %s',greenEntro.reveal())
-	print_ln('red entropy is %s',redEntro.reveal())
 
-	#find of color then next highest gain Attribute(outline)
 
 
 p0_inputs = sint.Matrix(14,4)
@@ -451,11 +429,11 @@ def hi(i,j):
 
 
 EntroArray = Array(4,sfix)
-total_shamir_array = sfix(0.0)
+Comparison_Entropy = sfix(0.0)
 #calculate the Entropy of the Shape Attirbute
-total_shamir_array = first_entropy(shamir_input,3,42)
-print_ln('Entropy of the Shape attribute is %s', total_shamir_array.reveal())
-Comparison_Entropy = total_shamir_array
+Comparison_Entropy = first_entropy(shamir_input,3,42)
+print_ln('Entropy of the Shape attribute is %s', Comparison_Entropy.reveal())
+
 
 
 gain_array = Array(3,sfix)
