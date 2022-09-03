@@ -101,7 +101,7 @@ MP-SPDZ requires one TCP port per party to be open to other
 parties. In the default setting, it's 5000 on party 0, and
 5001 on party 1 etc. You change change the base port (5000) using
 ``--portnumbase`` and individual ports for parties using
-``--my-port``. The scripts in use a random base port number, which you
+``--my-port``. The scripts use a random base port number, which you
 can also change with ``--portnumbase``.
 
 
@@ -138,6 +138,31 @@ Computation used more preprocessing than expected
 
 This indicates an error in the internal accounting of
 preprocessing. Please file a bug report.
+
+
+Windows/VirtualBox performance
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Performance when using Windows/VirtualBox is by default abysmal, as
+AVX/AVX2 instructions are deactivated (see e.g.
+`here <https://stackoverflow.com/questions/65780506/how-to-enable-avx-avx2-in-virtualbox-6-1-16-with-ubuntu-20-04-64bit>`_),
+which causes a dramatic performance loss. Deactivate Hyper-V/Hypervisor
+using::
+
+  bcdedit /set hypervisorlaunchtype off
+  DISM /Online /Disable-Feature:Microsoft-Hyper-V
+
+
+Performance can be further increased when compiling MP-SPDZ yourself:
+::
+
+ sudo apt-get update
+ sudo apt-get install automake build-essential git libboost-dev libboost-thread-dev libntl-dev libsodium-dev libssl-dev libtool m4 python3 texinfo yasm
+ git clone https://github.com/data61/MP-SPDZ.git
+ cd MP-SPDZ
+ make tldr
+
+See also `this issue <https://github.com/data61/MP-SPDZ/issues/557>`_ for a discussion.
 
 
 ``mac_fail``

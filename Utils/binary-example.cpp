@@ -20,6 +20,7 @@
 #include "GC/Secret.hpp"
 #include "GC/TinyPrep.hpp"
 #include "GC/ThreadMaster.hpp"
+#include "GC/SemiSecret.hpp"
 #include "Protocols/Atlas.hpp"
 #include "Protocols/MaliciousRepPrep.hpp"
 #include "Protocols/Share.hpp"
@@ -48,7 +49,7 @@ int main(int argc, char** argv)
         protocol = argv[3];
 
     if (protocol == "Tinier")
-        run<GC::TinierSecret<gf2n_short>>(argc, argv);
+        run<GC::TinierSecret<gf2n_mac_key>>(argc, argv);
     else if (protocol == "Rep3")
         run<GC::SemiHonestRepSecret>(argc, argv);
     else if (protocol == "Rep4")

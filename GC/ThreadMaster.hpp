@@ -11,6 +11,8 @@
 
 #include "instructions.h"
 
+#include "Tools/benchmarking.h"
+
 #include "Machine.hpp"
 
 namespace GC
@@ -58,23 +60,14 @@ Thread<T>* ThreadMaster<T>::new_thread(int i)
 template<class T>
 void ThreadMaster<T>::run()
 {
-#ifndef INSECURE
     if (not opts.live_prep)
     {
-        cerr
-                << "Preprocessing from file not supported by binary virtual machines"
-                << endl;
-        exit(1);
+        insecure("preprocessing from file in binary virtual machines");
     }
-#endif
 
     P = new PlainPlayer(N, "main");
 
     machine.load_schedule(progname);
-
-    if (T::needs_ot)
-        for (int i = 0; i < machine.nthreads; i++)
-            machine.ot_setups.push_back({*P, true});
 
     for (int i = 0; i < machine.nthreads; i++)
         threads.push_back(new_thread(i));
@@ -104,13 +97,15 @@ void ThreadMaster<T>::run()
         delete thread;
     }
 
-    delete P;
-
     exe_stats.print();
     stats.print();
 
     cerr << "Time = " << timer.elapsed() << " seconds" << endl;
     cerr << "Data sent = " << stats.sent * 1e-6 << " MB" << endl;
+
+    machine.print_global_comm(*P, stats);
+
+    delete P;
 }
 
 } /* namespace GC */

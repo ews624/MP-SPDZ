@@ -65,6 +65,7 @@ protected:
 
   static void init_field(int nn = 0);
   static void init_default(int, bool = false) { init_field(); }
+  static void init_minimum(int lower);
 
   static void reset() { n = 0; }
   static int degree() { return n; }
@@ -84,6 +85,8 @@ protected:
   static int length()         { return n == 0 ? MAX_N_BITS : n; }
 
   static bool allows(Dtype type) { (void) type; return true; }
+
+  static string options();
 
   static const true_type invertible;
   static const true_type characteristic_two;
@@ -117,6 +120,7 @@ protected:
   gf2n_(U a) : a(a & mask) {}
   gf2n_(long a) : gf2n_(U(a)) {}
   gf2n_(int a) : gf2n_(U(unsigned(a))) {}
+  gf2n_(long long a) : gf2n_(U(a)) {}
   template<class T>
   gf2n_(IntBase<T> a) : a(a.get()) {}
 
@@ -152,6 +156,8 @@ protected:
   gf2n_ operator*(int x) const { return *this * gf2n_(x); }
 
   gf2n_ invert() const;
+
+  gf2n_ operator-() const { return *this; }
   void negate() { return; }
 
   /* Bitwise Ops */
@@ -213,7 +219,7 @@ public:
   static const int DEFAULT_LENGTH = 40;
 
   static int length()         { return n == 0 ? DEFAULT_LENGTH : n; }
-  static int default_degree() { return 40; }
+  static int default_degree() { return DEFAULT_LENGTH; }
 
   static void init_field(int nn = 0);
 

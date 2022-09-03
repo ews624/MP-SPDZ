@@ -8,7 +8,8 @@
 
 #include "MascotPrep.h"
 #include "RingOnlyPrep.h"
-#include "Spdz2kShare.h"
+
+template<int, int> class Spdz2kShare;
 
 template<class T, class U>
 void bits_from_square_in_ring(vector<T>& bits, int buffer_size, U* bit_prep);
@@ -21,7 +22,7 @@ class Spdz2kPrep : public virtual MaliciousRingPrep<T>,
         public virtual MascotTriplePrep<T>,
         public virtual RingOnlyPrep<T>
 {
-    typedef Spdz2kShare<T::k + 2, T::s> BitShare;
+    typedef typename T::bit_prep_type BitShare;
     DataPositions bit_pos;
     MascotTriplePrep<BitShare>* bit_prep;
     SubProcessor<BitShare>* bit_proc;

@@ -18,6 +18,7 @@
 
 template<int K, int S> class Spdz2kMultiplier;
 template<class T> class Spdz2kTripleGenerator;
+template<class T> class SPDZ2k;
 
 namespace GC
 {
@@ -38,6 +39,8 @@ public:
     typedef Z2<K + S> open_type;
 
     typedef Spdz2kShare prep_type;
+    typedef Spdz2kShare<K + 2, S> bit_prep_type;
+    typedef Spdz2kShare<K + S, S> prep_check_type;
     typedef Spdz2kShare input_check_type;
     typedef Spdz2kMultiplier<K, S> Multiplier;
     typedef Spdz2kTripleGenerator<Spdz2kShare> TripleGenerator;
@@ -48,14 +51,12 @@ public:
     typedef MAC_Check Direct_MC;
     typedef ::Input<Spdz2kShare> Input;
     typedef ::PrivateOutput<Spdz2kShare> PrivateOutput;
-    typedef SPDZ<Spdz2kShare> Protocol;
+    typedef SPDZ2k<Spdz2kShare> Protocol;
     typedef Spdz2kPrep<Spdz2kShare> LivePrep;
 
 #ifndef NO_MIXED_CIRCUITS
 #ifdef SPDZ2K_BIT
     typedef GC::TinySecret<S> bit_type;
-#else
-    typedef GC::TinierSecret<gf2n_short> bit_type;
 #endif
 #endif
 

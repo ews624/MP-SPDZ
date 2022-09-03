@@ -305,7 +305,7 @@ class ldmsb(base.DirectMemoryInstruction, base.ReadMemoryInstruction,
     :param: memory address (int)
     """
     code = opcodes['LDMSB']
-    arg_format = ['sbw','int']
+    arg_format = ['sbw','long']
 
 class stmsb(base.DirectMemoryWriteInstruction, base.VectorInstruction):
     """ Copy secret bit register to secret bit memory cell with compile-time
@@ -315,7 +315,7 @@ class stmsb(base.DirectMemoryWriteInstruction, base.VectorInstruction):
     :param: memory address (int)
     """
     code = opcodes['STMSB']
-    arg_format = ['sb','int']
+    arg_format = ['sb','long']
     # def __init__(self, *args, **kwargs):
     #     super(type(self), self).__init__(*args, **kwargs)
     #     import inspect
@@ -330,7 +330,7 @@ class ldmcb(base.DirectMemoryInstruction, base.ReadMemoryInstruction,
     :param: memory address (int)
     """
     code = opcodes['LDMCB']
-    arg_format = ['cbw','int']
+    arg_format = ['cbw','long']
 
 class stmcb(base.DirectMemoryWriteInstruction, base.VectorInstruction):
     """ Copy clear bit register to clear bit memory cell with compile-time
@@ -340,9 +340,10 @@ class stmcb(base.DirectMemoryWriteInstruction, base.VectorInstruction):
     :param: memory address (int)
     """
     code = opcodes['STMCB']
-    arg_format = ['cb','int']
+    arg_format = ['cb','long']
 
-class ldmsbi(base.ReadMemoryInstruction, base.VectorInstruction):
+class ldmsbi(base.ReadMemoryInstruction, base.VectorInstruction,
+             base.IndirectMemoryInstruction):
     """ Copy secret bit memory cell with run-time address to secret bit
     register.
 
@@ -351,8 +352,10 @@ class ldmsbi(base.ReadMemoryInstruction, base.VectorInstruction):
     """
     code = opcodes['LDMSBI']
     arg_format = ['sbw','ci']
+    direct = staticmethod(ldmsb)
 
-class stmsbi(base.WriteMemoryInstruction, base.VectorInstruction):
+class stmsbi(base.WriteMemoryInstruction, base.VectorInstruction,
+             base.IndirectMemoryInstruction):
     """ Copy secret bit register to secret bit memory cell with run-time
     address.
 
@@ -361,8 +364,10 @@ class stmsbi(base.WriteMemoryInstruction, base.VectorInstruction):
     """
     code = opcodes['STMSBI']
     arg_format = ['sb','ci']
+    direct = staticmethod(stmsb)
 
-class ldmcbi(base.ReadMemoryInstruction, base.VectorInstruction):
+class ldmcbi(base.ReadMemoryInstruction, base.VectorInstruction,
+             base.IndirectMemoryInstruction):
     """ Copy clear bit memory cell with run-time address to clear bit
     register.
 
@@ -371,8 +376,10 @@ class ldmcbi(base.ReadMemoryInstruction, base.VectorInstruction):
     """
     code = opcodes['LDMCBI']
     arg_format = ['cbw','ci']
+    direct = staticmethod(ldmcb)
 
-class stmcbi(base.WriteMemoryInstruction, base.VectorInstruction):
+class stmcbi(base.WriteMemoryInstruction, base.VectorInstruction,
+             base.IndirectMemoryInstruction):
     """ Copy clear bit register to clear bit memory cell with run-time
     address.
 
@@ -381,6 +388,7 @@ class stmcbi(base.WriteMemoryInstruction, base.VectorInstruction):
     """
     code = opcodes['STMCBI']
     arg_format = ['cb','ci']
+    direct = staticmethod(stmcb)
 
 class ldmsdi(base.ReadMemoryInstruction):
     code = opcodes['LDMSDI']

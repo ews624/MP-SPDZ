@@ -85,6 +85,7 @@ public:
 	Z2(__m128i x) : Z2() { avx_memcpy(a, &x, min(N_BYTES, 16)); }
 	Z2(int x) : Z2(long(x)) { a[N_WORDS - 1] &= UPPER_MASK; }
 	Z2(long x) : Z2(mp_limb_t(x)) { if (K > 64 and x < 0) memset(&a[1], -1, N_BYTES - 8); }
+	Z2(long long x) : Z2(long(x)) {}
 	template<class T>
 	Z2(const IntBase<T>& x);
 	/**
@@ -438,6 +439,12 @@ void Z2<K>::randomize(PRNG& G, int n)
 template<int K>
 void Z2<K>::randomize_part(PRNG& G, int n)
 {
+	if (n >= N_BITS)
+	{
+		randomize(G);
+		return;
+	}
+
 	*this = {};
 	G.get_octets((octet*)a, DIV_CEIL(n, 8));
 	a[DIV_CEIL(n, 64) - 1] &= mp_limb_t(-1LL) >> (N_LIMB_BITS - 1 - (n - 1) % N_LIMB_BITS);

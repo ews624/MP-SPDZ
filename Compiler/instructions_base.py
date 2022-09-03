@@ -106,6 +106,12 @@ opcodes = dict(
     CONV2DS = 0xAC,
     CHECK = 0xAF,
     PRIVATEOUTPUT = 0xAD,
+    # Shuffling
+    SECSHUFFLE = 0xFA,
+    GENSECSHUFFLE = 0xFB,
+    APPLYSHUFFLE = 0xFC,
+    DELSHUFFLE = 0xFD,
+    INVPERM = 0xFE,
     # Data access
     TRIPLE = 0x50,
     BIT = 0x51,
@@ -202,8 +208,8 @@ opcodes = dict(
     CONDPRINTPLAIN = 0xE1,
     INTOUTPUT = 0xE6,
     FLOATOUTPUT = 0xE7,
-    GBITDEC = 0x184,
-    GBITCOM = 0x185,
+    GBITDEC = 0x18A,
+    GBITCOM = 0x18B,
     # Secure socket
     INITSECURESOCKET = 0x1BA,
     RESPSECURESOCKET = 0x1BB
@@ -337,7 +343,7 @@ def gf2n(instruction):
         if isinstance(arg_format, list):
             __format = []
             for __f in arg_format:
-                if __f in ('int', 'p', 'ci', 'str'):
+                if __f in ('int', 'long', 'p', 'ci', 'str'):
                     __format.append(__f)
                 else:
                     __format.append(__f[0] + 'g' + __f[1:])
@@ -360,7 +366,7 @@ def gf2n(instruction):
             arg_format = instruction_cls.gf2n_arg_format
         elif isinstance(instruction_cls.arg_format, itertools.repeat):
             __f = next(instruction_cls.arg_format)
-            if __f != 'int' and __f != 'p':
+            if __f not in ('int', 'long', 'p'):
                 arg_format = itertools.repeat(__f[0] + 'g' + __f[1:])
         else:
             arg_format = copy.deepcopy(instruction_cls.arg_format)
@@ -536,7 +542,7 @@ def cisc(function):
 
         def get_bytes(self):
             assert len(self.kwargs) < 2
-            res = int_to_bytes(opcodes['CISC'])
+            res = LongArgFormat.encode(opcodes['CISC'])
             res += int_to_bytes(sum(len(x[0]) + 2 for x in self.calls) + 1)
             name = self.function.__name__
             String.check(name)
@@ -711,6 +717,14 @@ class IntArgFormat(ArgFormat):
     def __str__(self):
         return str(self.i)
 
+class LongArgFormat(IntArgFormat):
+    @classmethod
+    def encode(cls, arg):
+        return list(struct.pack('>Q', arg))
+
+    def __init__(self, f):
+        self.i = struct.unpack('>Q', f.read(8))[0]
+
 class ImmediateModpAF(IntArgFormat):
     @classmethod
     def check(cls, arg):
@@ -727,6 +741,8 @@ class ImmediateGF2NAF(IntArgFormat):
 class PlayerNoAF(IntArgFormat):
     @classmethod
     def check(cls, arg):
+        if not util.is_constant(arg):
+            raise CompilerError('Player number must be known at compile time')
         super(PlayerNoAF, cls).check(arg)
         if arg > 256:
             raise ArgumentError(arg, 'Player number > 256')
@@ -768,6 +784,7 @@ ArgFormats = {
     'i': ImmediateModpAF,
     'ig': ImmediateGF2NAF,
     'int': IntArgFormat,
+    'long': LongArgFormat,
     'p': PlayerNoAF,
     'str': String,
 }
@@ -808,7 +825,7 @@ class Instruction(object):
         return (prefix << self.code_length) + self.code
 
     def get_encoding(self):
-        enc = int_to_bytes(self.get_code())
+        enc = LongArgFormat.encode(self.get_code())
         # add the number of registers if instruction flagged as has var args
         if self.has_var_args():
             enc += int_to_bytes(len(self.args))
@@ -943,7 +960,7 @@ class ParsedInstruction:
                         except AttributeError:
                             pass
         read = lambda: struct.unpack('>I', f.read(4))[0]
-        full_code = read()
+        full_code = struct.unpack('>Q', f.read(8))[0]
         code = full_code % (1 << Instruction.code_length)
         self.size = full_code >> Instruction.code_length
         self.type = cls.reverse_opcodes[code]

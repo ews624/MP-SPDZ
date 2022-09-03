@@ -50,45 +50,48 @@ public:
         return "no";
     }
 
-    static string type_short()
-    {
-        return "no";
-    }
-
     static DataFieldType field_type()
     {
         throw not_implemented();
     }
 
+    static void init_minimum(int)
+    {
+    }
+
     static void fail()
     {
-        throw runtime_error("VM does not support binary circuits");
+        throw runtime_error("functionality not available");
     }
 
     NoValue() {}
-    NoValue(int) { fail(); }
+    NoValue(bool) {}
+    NoValue(ValueInterface) {}
+    NoValue(int128) {}
 
     void assign(const char*) { fail(); }
+
+    const char* get_ptr() const { return (char*) this; }
 
     int get() const { fail(); return 0; }
 
     int operator<<(int) const { fail(); return 0; }
     void operator+=(int) { fail(); }
 
-    bool operator!=(NoValue) const { fail(); return 0; }
+    bool operator!=(NoValue) const { return false; }
 
     bool operator==(int) { fail(); return false; }
 
     bool get_bit(int) { fail(); return 0; }
 
-    void randomize(PRNG&) { fail(); }
+    void randomize(PRNG&) {}
 
     void invert() { fail(); }
 
     void mask(int) { fail(); }
 
     void input(istream&, bool) { fail(); }
-    void output(ostream&, bool) { fail(); }
+    void output(ostream&, bool) {}
 };
 
 inline ostream& operator<<(ostream& o, NoValue)
@@ -131,6 +134,11 @@ public:
     }
 
     static int size()
+    {
+        return 0;
+    }
+
+    static int length()
     {
         return 0;
     }

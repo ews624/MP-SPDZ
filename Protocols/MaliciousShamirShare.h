@@ -38,9 +38,14 @@ public:
     typedef MaliciousRepPrep<MaliciousShamirShare> TriplePrep;
     typedef T random_type;
 
+    // indicate security relevance of field size
+    typedef T mac_key_type;
+
 #ifndef NO_MIXED_CIRCUITS
     typedef GC::MaliciousCcdSecret<gf2n_short> bit_type;
 #endif
+
+    static const bool malicious = true;
 
     static string type_short()
     {

@@ -14,6 +14,10 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
+#ifndef SSL_DIR
+#define SSL_DIR "Player-Data/"
+#endif
+
 typedef boost::asio::io_service ssl_service;
 
 void check_ssl_file(string filename);
@@ -25,7 +29,7 @@ public:
     ssl_ctx(string me) :
             boost::asio::ssl::context(boost::asio::ssl::context::tlsv12)
     {
-        string prefix = PREP_DIR + me;
+        string prefix = SSL_DIR + me;
         string cert_file = prefix + ".pem";
         string key_file = prefix + ".key";
         check_ssl_file(cert_file);
@@ -33,7 +37,7 @@ public:
 
         use_certificate_file(cert_file, pem);
         use_private_key_file(key_file, pem);
-        add_verify_path(PREP_DIR);
+        add_verify_path(SSL_DIR);
     }
 };
 
@@ -83,7 +87,6 @@ inline size_t send_non_blocking(ssl_socket* socket, octet* data, size_t length)
     return socket->write_some(boost::asio::buffer(data, length));
 }
 
-template<>
 inline void send(ssl_socket* socket, octet* data, size_t length)
 {
     size_t sent = 0;
@@ -99,7 +102,6 @@ inline void send(ssl_socket* socket, octet* data, size_t length)
     }
 }
 
-template<>
 inline void receive(ssl_socket* socket, octet* data, size_t length)
 {
     size_t received = 0;

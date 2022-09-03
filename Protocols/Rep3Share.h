@@ -27,8 +27,6 @@ class RepShare : public FixedVec<T, L>, public ShareInterface
 public:
     typedef T clear;
     typedef T open_type;
-    typedef T mac_type;
-    typedef T mac_key_type;
 
     const static bool needs_ot = false;
     const static bool dishonest_majority = false;
@@ -73,7 +71,7 @@ public:
     template<class U>
     static void shrsi(SubProcessor<U>& proc, const Instruction& inst)
     {
-        shrsi(proc, inst, T::invertible);
+        shrsi(proc, inst, T::prime_field);
     }
 
     template<class U>
@@ -124,6 +122,7 @@ public:
     const static bool expensive = false;
     const static bool variable_players = false;
     static const bool has_trunc_pr = true;
+    static const bool malicious = false;
 
     static string type_short()
     {
@@ -138,9 +137,10 @@ public:
         return T::type_char();
     }
 
-    static Rep3Share constant(T value, int my_num, const T& alphai = {})
+    static Rep3Share constant(T value, int my_num,
+            typename super::mac_key_type = {})
     {
-        return Rep3Share(value, my_num, alphai);
+        return Rep3Share(value, my_num);
     }
 
     Rep3Share()

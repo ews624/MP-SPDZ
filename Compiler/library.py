@@ -243,6 +243,10 @@ def store_in_mem(value, address):
     try:
         value.store_in_mem(address)
     except AttributeError:
+        if isinstance(value, (list, tuple)):
+            for i, x in enumerate(value):
+                store_in_mem(x, address + i)
+            return
         # legacy
         if value.is_clear:
             if isinstance(address, cint):
@@ -261,11 +265,13 @@ def reveal(secret):
     try:
         return secret.reveal()
     except AttributeError:
+        if secret.is_clear:
+            return secret
         if secret.is_gf2n:
             res = cgf2n()
         else:
             res = cint()
-        instructions.asm_open(res, secret)
+        instructions.asm_open(True, res, secret)
         return res
 
 @vectorize
@@ -460,6 +466,10 @@ def method_block(function):
     return wrapper
 
 def cond_swap(x,y):
+    from .types import SubMultiArray
+    if isinstance(x, (Array, SubMultiArray)):
+        b = x[0] > y[0]
+        return list(zip(*[b.cond_swap(xx, yy) for xx, yy in zip(x, y)]))
     b = x < y
     if isinstance(x, sfloat):
         res = ([], [])
@@ -874,15 +884,15 @@ def range_loop(loop_body, start, stop=None, step=None):
         # known loop count
         if condition(start):
             get_tape().req_node.children[-1].aggregator = \
-                lambda x: ((stop - start) // step) * x[0]
+                lambda x: int(ceil(((stop - start) / step))) * x[0]
 
 def for_range(start, stop=None, step=None):
     """
     Decorator to execute loop bodies consecutively.  Arguments work as
-    in Python :py:func:`range`, but they can by any public
+    in Python :py:func:`range`, but they can be any public
     integer. Information has to be passed out via container types such
-    as :py:class:`~Compiler.types.Array` or declaring registers as
-    :py:obj:`global`. Note that changing Python data structures such
+    as :py:class:`~Compiler.types.Array` or using :py:func:`update`.
+    Note that changing Python data structures such
     as lists within the loop is not possible, but the compiler cannot
     warn about this.
 
@@ -897,13 +907,11 @@ def for_range(start, stop=None, step=None):
         @for_range(n)
         def _(i):
             a[i] = i
-            global x
-            x += 1
+            x.update(x + 1)
 
     Note that you cannot overwrite data structures such as
-    :py:class:`~Compiler.types.Array` in a loop even when using
-    :py:obj:`global`. Use :py:func:`~Compiler.types.Array.assign`
-    instead.
+    :py:class:`~Compiler.types.Array` in a loop.  Use
+    :py:func:`~Compiler.types.Array.assign` instead.
     """
     def decorator(loop_body):
         range_loop(loop_body, start, stop, step)
@@ -1149,6 +1157,7 @@ def multithread(n_threads, n_items=None, max_size=None):
 
     :param n_threads: compile-time (int)
     :param n_items: regint/cint/int (default: :py:obj:`n_threads`)
+    :param max_size: maximum size to be processed at once (default: no limit)
 
     The following executes ``f(0, 8)``, ``f(8, 8)``, and
     ``f(16, 9)`` in three different threads:
@@ -1366,6 +1375,18 @@ def tree_reduce_multithread(n_threads, function, vector):
         left = (left + 1) // 2
     return inputs[0]
 
+def tree_reduce(function, sequence):
+    """ Round-efficient reduction. The following computes the maximum
+    of the list :py:obj:`l`::
+
+      m = tree_reduce(lambda x, y: x.max(y), l)
+
+    :param function: reduction function taking two arguments
+    :param sequence: list, vector, or array
+
+    """
+    return util.tree_reduce(function, sequence)
+
 def foreach_enumerate(a):
     """ Run-time loop over public data. This uses
     ``Player-Data/Public-Input/<progname>``. Example:
@@ -1501,11 +1522,17 @@ def if_then(condition):
     state = State()
     if callable(condition):
         condition = condition()
+    try:
+        if not condition.is_clear:
+            raise CompilerError('cannot branch on secret values')
+    except AttributeError:
+        pass
     state.condition = regint.conv(condition)
     state.start_block = instructions.program.curr_block
     state.req_child = get_tape().open_scope(lambda x: x[0].max(x[1]), \
                                                    name='if-block')
     state.has_else = False
+    state.caller = [frame[1:] for frame in inspect.stack()[1:]]
     instructions.program.curr_tape.if_states.append(state)
 
 def else_then():
@@ -1848,7 +1875,8 @@ def sint_cint_division(a, b, k, f, kappa):
     return (sign_a * sign_b) * A
 
 def IntDiv(a, b, k, kappa=None):
-    return FPDiv(a.extend(2 * k) << k, b.extend(2 * k) << k, 2 * k, k,
+    l = 2 * k + 1
+    return FPDiv(a.extend(l) << k, b.extend(l) << k, l, k,
                  kappa, nearest=True)
 
 @instructions_base.ret_cisc
@@ -1870,24 +1898,25 @@ def FPDiv(a, b, k, f, kappa, simplex_flag=False, nearest=False):
     theta = int(ceil(log(k/3.5) / log(2)))
 
     base.set_global_vector_size(b.size)
-    alpha = b.get_type(2 * k).two_power(2*f)
+    alpha = b.get_type(2 * k).two_power(2*f, size=b.size)
     w = AppRcr(b, k, f, kappa, simplex_flag, nearest).extend(2 * k)
     x = alpha - b.extend(2 * k) * w
     base.reset_global_vector_size()
 
-    y = a.extend(2 *k) * w
-    y = y.round(2*k, f, kappa, nearest, signed=True)
+    l_y = k + 3 * f - res_f
+    y = a.extend(l_y) * w
+    y = y.round(l_y, f, kappa, nearest, signed=True)
 
     for i in range(theta - 1):
         x = x.extend(2 * k)
-        y = y.extend(2 * k) * (alpha + x).extend(2 * k)
+        y = y.extend(l_y) * (alpha + x).extend(l_y)
         x = x * x
-        y = y.round(2*k, 2*f, kappa, nearest, signed=True)
+        y = y.round(l_y, 2*f, kappa, nearest, signed=True)
         x = x.round(2*k, 2*f, kappa, nearest, signed=True)
 
     x = x.extend(2 * k)
-    y = y.extend(2 * k) * (alpha + x).extend(2 * k)
-    y = y.round(k + 3 * f - res_f, 3 * f - res_f, kappa, nearest, signed=True)
+    y = y.extend(l_y) * (alpha + x).extend(l_y)
+    y = y.round(l_y, 3 * f - res_f, kappa, nearest, signed=True)
     return y
 
 def AppRcr(b, k, f, kappa=None, simplex_flag=False, nearest=False):

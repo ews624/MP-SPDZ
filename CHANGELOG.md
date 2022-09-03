@@ -1,5 +1,39 @@
 The changelog explains changes pulled through from the private development repository. Bug fixes and small enhancements are committed between releases and not documented here.
 
+## 0.3.3 (Aug 25, 2022)
+
+- Use SoftSpokenOT to avoid unclear security of KOS OT extension candidate
+- Fix security bug in MAC check when using multithreading
+- Fix security bug to prevent selective failure attack by checking earlier
+- Fix security bug in Mama: insufficient sacrifice.
+- Inverse permutation (@Quitlox)
+- Easier direct compilation (@eriktaubeneck)
+- Generally allow element-vector operations
+- Increase maximum register size to 2^54
+- Client example in Python
+- Uniform base OTs across platforms
+- Multithreaded base OT computation
+- Faster random bit generation in two-player Semi(2k)
+
+## 0.3.2 (May 27, 2022)
+
+- Secure shuffling
+- O(n log n) radix sorting
+- Documented BGV encryption interface
+- Optimized matrix multiplication in dealer protocol
+- Fixed security bug in homomorphic encryption parameter generation
+- Fixed security bug in Temi matrix multiplication
+
+## 0.3.1 (Apr 19, 2022)
+
+- Protocol in dealer model
+- Command-line option for security parameter
+- Fixed security bug in SPDZ2k (see Section 3.4 of [the updated paper](https://eprint.iacr.org/2018/482))
+- Ability to run high-level (Python) code from C++
+- More memory capacity due to 64-bit addressing
+- Homomorphic encryption for more fields of characteristic two
+- Docker container
+
 ## 0.3.0 (Feb 17, 2022)
 
 - Semi-honest computation based on threshold semi-homomorphic encryption

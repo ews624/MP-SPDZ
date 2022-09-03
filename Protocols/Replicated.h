@@ -53,6 +53,8 @@ protected:
 
     int trunc_pr_counter;
     int rounds, trunc_rounds;
+    int dot_counter;
+    int bit_counter;
 
 public:
     typedef T share_type;
@@ -119,6 +121,8 @@ public:
 
     virtual void cisc(SubProcessor<T>&, const Instruction&)
     { throw runtime_error("CISC instructions not implemented"); }
+
+    virtual vector<int> get_relevant_players();
 };
 
 /**
@@ -144,7 +148,7 @@ public:
 
     static void assign(T& share, const typename T::clear& value, int my_num)
     {
-        assert(T::length == 2);
+        assert(T::vector_length == 2);
         share.assign_zero();
         if (my_num < 2)
             share[my_num] = value;

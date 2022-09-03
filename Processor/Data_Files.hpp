@@ -230,7 +230,7 @@ void Sub_Data_Files<T>::prune()
   my_input_buffers.prune();
   for (int j = 0; j < num_players; j++)
     input_buffers[j].prune();
-  for (auto it : extended)
+  for (auto& it : extended)
     it.second.prune();
   dabit_buffer.prune();
   if (part != 0)
@@ -299,9 +299,7 @@ template<int>
 void Sub_Data_Files<T>::buffer_edabits_with_queues(bool strict, int n_bits,
         false_type)
 {
-#ifndef INSECURE
-  throw runtime_error("no secure implementation of reading edaBits from files");
-#endif
+  insecure("reading edaBits from files");
   if (edabit_buffers.find(n_bits) == edabit_buffers.end())
     {
       string filename = PrepBase::get_edabit_filename(prep_data_dir,

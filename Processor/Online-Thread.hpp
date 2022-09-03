@@ -100,6 +100,9 @@ void thread_info<sint, sgf2n>::Sub_Main_Func()
   processor = new Processor<sint, sgf2n>(tinfo->thread_num,P,*MC2,*MCp,machine,progs.at(thread_num > 0));
   auto& Proc = *processor;
 
+  // don't count communication for initialization
+  P.reset_stats();
+
   bool flag=true;
   int program=-3; 
   // int exec=0;
@@ -265,6 +268,9 @@ void thread_info<sint, sgf2n>::Sub_Main_Func()
           // Execute the program
           progs[program].execute(Proc);
 
+          // make sure values used in other threads are safe
+          Proc.check();
+
           // prevent mangled output
           cout.flush();
 
@@ -287,10 +293,8 @@ void thread_info<sint, sgf2n>::Sub_Main_Func()
   // final check
   Proc.check();
 
-#ifndef INSECURE
   if (machine.opts.file_prep_per_thread)
     Proc.DataF.prune();
-#endif
 
   wait_timer.start();
   queues->next();

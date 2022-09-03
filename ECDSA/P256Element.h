@@ -22,12 +22,13 @@ private:
     EC_POINT* point;
 
 public:
-    typedef void next;
+    typedef P256Element next;
     typedef void Square;
 
     static const true_type invertible;
 
     static int size() { return 0; }
+    static int length() { return 256; }
     static string type_string() { return "P256"; }
 
     static void init();

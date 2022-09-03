@@ -9,6 +9,7 @@
 #include "Protocols/Beaver.h"
 #include "Protocols/Semi.h"
 #include "Processor/DummyProtocol.h"
+#include "GC/NoShare.h"
 #include "ShareInterface.h"
 
 #include <string>
@@ -51,8 +52,6 @@ class SemiShare : public T, public ShareInterface
     typedef T super;
 
 public:
-    typedef T mac_key_type;
-    typedef T mac_type;
     typedef T open_type;
     typedef T clear;
 
@@ -79,6 +78,7 @@ public:
     const static bool variable_players = true;
     const static bool expensive = false;
     static const bool has_trunc_pr = true;
+    static const bool malicious = false;
 
     static string type_short() { return "D" + string(1, T::type_char()); }
 
@@ -87,10 +87,10 @@ public:
         return nplayers - 1;
     }
 
-    static SemiShare constant(const clear& other, int my_num,
-            const T& alphai = {}, int = -1)
+    static SemiShare constant(const open_type& other, int my_num,
+            mac_key_type = {}, int = -1)
     {
-        return SemiShare(other, my_num, alphai);
+        return SemiShare(other, my_num);
     }
 
     SemiShare()
@@ -100,7 +100,7 @@ public:
     SemiShare(const U& other) : T(other)
     {
     }
-    SemiShare(const clear& other, int my_num, const T& alphai = {})
+    SemiShare(const open_type& other, int my_num, const T& alphai = {})
     {
         (void) alphai;
         Protocol::assign(*this, other, my_num);
@@ -129,6 +129,31 @@ public:
     void unpack(octetStream& os, int n_bits)
     {
         super::unpack(os, n_bits);
+    }
+
+    template<class U>
+    static void shrsi(SubProcessor<U>& proc, const Instruction& inst)
+    {
+        shrsi(proc, inst, T::prime_field);
+    }
+
+    template<class U>
+    static void shrsi(SubProcessor<U>&, const Instruction&,
+            true_type)
+    {
+        throw runtime_error("shrsi not implemented");
+    }
+
+    template<class U>
+    static void shrsi(SubProcessor<U>& proc, const Instruction& inst,
+            false_type)
+    {
+        for (int i = 0; i < inst.get_size(); i++)
+        {
+            auto& dest = proc.get_S_ref(inst.get_r(0) + i);
+            auto& source = proc.get_S_ref(inst.get_r(1) + i);
+            dest = source >> inst.get_n();
+        }
     }
 };
 

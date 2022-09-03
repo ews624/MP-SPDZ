@@ -40,14 +40,9 @@ public:
         return "CCD";
     }
 
-    static MAC_Check* new_mc(T)
+    static MAC_Check* new_mc(typename super::mac_key_type)
     {
         return new MAC_Check;
-    }
-
-    static This new_reg()
-    {
-        return {};
     }
 
     CcdShare()

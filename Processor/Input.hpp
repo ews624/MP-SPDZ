@@ -81,7 +81,7 @@ void InputBase<T>::reset(int player)
 }
 
 template<class T>
-void InputBase<T>::reset_all(Player& P)
+void InputBase<T>::reset_all(PlayerBase& P)
 {
     this->P = &P;
     my_num = P.my_num();
@@ -293,7 +293,7 @@ int InputBase<T>::get_player(SubProcessor<T>& Proc, int arg, bool player_from_re
    if (player_from_reg)
    {
        assert(Proc.Proc);
-       auto res = Proc.Proc->read_Ci(arg);
+       auto res = Proc.Proc->sync_Ci(arg);
        if (res >= Proc.P.num_players())
            throw runtime_error("player id too large: " + to_string(res));
        return res;

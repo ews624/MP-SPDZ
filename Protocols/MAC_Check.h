@@ -11,6 +11,7 @@ using namespace std;
 #include "Networking/Player.h"
 #include "Protocols/MAC_Check_Base.h"
 #include "Tools/time-func.h"
+#include "Tools/Coordinator.h"
 
 
 /* The MAX number of things we will partially open before running
@@ -65,7 +66,11 @@ class Tree_MAC_Check : public TreeSum<typename U::open_type>, public MAC_Check_B
 {
   typedef typename U::open_type T;
 
+  template<class V> friend class Tree_MAC_Check;
+
   protected:
+
+  static Coordinator* coordinator;
 
   /* POpen Data */
   int popen_cnt;
@@ -78,6 +83,9 @@ class Tree_MAC_Check : public TreeSum<typename U::open_type>, public MAC_Check_B
     { return max(macs.size(), vals.size()); }
 
   public:
+
+  static void setup(Player& P);
+  static void teardown();
 
   Tree_MAC_Check(const typename U::mac_key_type::Scalar& ai, int opening_sum = 10,
       int max_broadcast = 10, int send_player = 0);
@@ -93,6 +101,9 @@ class Tree_MAC_Check : public TreeSum<typename U::open_type>, public MAC_Check_B
   // compatibility
   void set_random_element(const U& random_element) { (void) random_element; }
 };
+
+template<class U>
+Coordinator* Tree_MAC_Check<U>::coordinator = 0;
 
 /**
  * SPDZ opening protocol with MAC check (indirect communication)
@@ -122,7 +133,6 @@ template<class T, class U, class V, class W>
 class MAC_Check_Z2k : public Tree_MAC_Check<W>
 {
 protected:
-  vector<T> shares;
   Preprocessing<W>* prep;
 
   W get_random_element();
@@ -130,11 +140,11 @@ protected:
 public:
   vector<W> random_elements;
 
-  void AddToCheck(const W& share, const T& value, const Player& P);
   MAC_Check_Z2k(const T& ai, int opening_sum=10, int max_broadcast=10, int send_player=0);
   MAC_Check_Z2k(const T& ai, Names& Nms, int thread_num);
 
   void prepare_open(const W& secret);
+  void prepare_open_no_mask(const W& secret);
 
   virtual void Check(const Player& P);
   void set_random_element(const W& random_element);
@@ -299,7 +309,8 @@ void TreeSum<T>::start(vector<T>& values, const Player& P)
     {
       // send from the root player
       os.reset_write_head();
-      for (unsigned int i=0; i<values.size(); i++)
+      size_t n = values.size();
+      for (unsigned int i=0; i<n; i++)
         { values[i].pack(os); }
       timers[BCAST].start();
       for (int i = 1; i < max_broadcast && i < P.num_players(); i++)

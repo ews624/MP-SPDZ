@@ -148,7 +148,7 @@ def argmax(x):
     """ Compute index of maximum element.
 
     :param x: iterable
-    :returns: sint
+    :returns: sint or 0 if :py:obj:`x` has length 1
     """
     def op(a, b):
         comp = (a[1] > b[1])
@@ -164,7 +164,7 @@ def softmax(x):
     return softmax_from_exp(exp_for_softmax(x)[0])
 
 def exp_for_softmax(x):
-    m = util.max(x)
+    m = util.max(x) - get_limit(x[0]) + 1 + math.log(len(x), 2)
     mv = m.expand_to_vector(len(x))
     try:
         x = x.get_vector()
@@ -1079,14 +1079,17 @@ class MaxPool(NoVariableLayer):
             (type(self).__name__, self.X.sizes, self.strides,
              self.ksize, self.padding)
 
-    def _forward(self, batch):
+    def forward(self, batch=None, training=False):
+        if batch is None:
+            batch = Array.create_from(regint(0))
         def process(pool, bi, k, i, j):
             def m(a, b):
                 c = a[0] > b[0]
                 l = [c * x for x in a[1]]
                 l += [(1 - c) * x for x in b[1]]
                 return c.if_else(a[0], b[0]), l
-            red = util.tree_reduce(m, [(x[0], [1]) for x in pool])
+            red = util.tree_reduce(m, [(x[0], [1] if training else [])
+                                       for x in pool])
             self.Y[bi][i][j][k] = red[0]
             for i, x in enumerate(red[1]):
                 self.comparisons[bi][k][i] = x
@@ -2381,6 +2384,11 @@ class Optimizer:
         for layer in self.layers:
             layer.output_weights()
 
+    def summary(self):
+        sizes = [var.total_size() for var in self.thetas]
+        print(sizes)
+        print('Trainable params:', sum(sizes))
+
 class Adam(Optimizer):
     """ Adam/AMSgrad optimizer.
 
@@ -2650,9 +2658,7 @@ class keras:
                 return list(self.opt.thetas)
 
             def summary(self):
-                sizes = [var.total_size() for var in self.trainable_variables]
-                print(sizes)
-                print('Trainable params:', sum(sizes))
+                self.opt.summary()
 
             def build(self, input_shape, batch_size=128):
                 data_input_shape = input_shape
