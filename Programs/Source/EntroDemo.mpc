@@ -1,0 +1,31 @@
+import math
+import mpc_math
+
+sfix.set_precision(16,32)
+
+## NOTE: DATA columns in order from left to right are
+# Color, Outline, Dot, Shape
+
+
+def generateArray(rows,columns):
+
+
+    p0_inputs = sint.Matrix(rows,columns)
+    p0_inputs.input_from(0)
+
+    p1_inputs = sint.Matrix(rows,columns)
+    p1_inputs.input_from(1)
+
+    p2_inputs = sint.Matrix(rows,columns)
+    p2_inputs.input_from(2)
+
+    shamir_input = sint.Matrix((3*rows),columns)
+
+    @for_range_parallel(3,[rows,columns])
+    def hi(i,j):
+    	shamir_input[i][j] = p0_inputs[i][j]
+    	shamir_input[i+rows][j] = p1_inputs[i][j]
+    	shamir_input[i+(rows*2)][j] = p2_inputs[i][j]
+    return shamir_input
+
+CombinedInputs = generateArray(14,4)

@@ -28,7 +28,7 @@ def first_entropy(examples, count,range):
 		triangles.write(triangles+f)
 		squares.write(squares+(sint(1)-f))
 
-	x = sfix(triangles)/sfix(range)
+	x = sfix(sfix(triangles)/sfix(range))
 	y = sfix(squares)/sfix(range)
 	entropy.write((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
 
