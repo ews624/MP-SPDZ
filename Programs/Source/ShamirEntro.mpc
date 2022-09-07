@@ -19,10 +19,6 @@ def first_entropy(examples, count,range):
 	entropy = sfix.MemValue(0)
 	triangles = sint.MemValue(0)
 	squares = sint.MemValue(0)
-	different_attri = Array(2,sint)
-	different_attri.assign_all(0)
-	x = sfix(0)
-	biggest = sint.MemValue(0)
 	@for_range_opt(range)
 	def f(i):
 		compvar = examples[i][count]
@@ -31,9 +27,6 @@ def first_entropy(examples, count,range):
 		f = (compvar == sint(1))
 		triangles.write(triangles+f)
 		squares.write(squares+(sint(1)-f))
-
-		f = (biggest < compvar)
-		biggest.write((compvar*f)+(biggest*(sint(1)-f)))
 
 	x = sfix(triangles)/sfix(range)
 	y = sfix(squares)/sfix(range)
@@ -429,17 +422,17 @@ def hi(i,j):
 
 
 EntroArray = Array(4,sfix)
-Comparison_Entropy = sfix(0.0)
+Shape_Entropy = sfix(0.0)
 #calculate the Entropy of the Shape Attirbute
-Comparison_Entropy = first_entropy(shamir_input,3,42)
-print_ln('Entropy of the Shape attribute is %s', Comparison_Entropy.reveal())
+Shape_Entropy = first_entropy(shamir_input,3,42)
+print_ln('Entropy of the Shape attribute is %s', Shape_Entropy.reveal())
 
 
 
 gain_array = Array(3,sfix)
 @for_range_opt(3)
 def gainAll(i):
-	gain_array[i]= sec_entropy(shamir_input,Comparison_Entropy,i,42)
+	gain_array[i]= sec_entropy(shamir_input,Shape_Entropy,i,42)
 
 
 f = sint(-1)

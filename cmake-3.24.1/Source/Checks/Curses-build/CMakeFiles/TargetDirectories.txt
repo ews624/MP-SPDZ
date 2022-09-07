@@ -1,0 +1,2 @@
+/home/ethan/Documents/GitHub/MP-SPDZ/cmake-3.24.1/Source/Checks/Curses-build/CMakeFiles/edit_cache.dir
+/home/ethan/Documents/GitHub/MP-SPDZ/cmake-3.24.1/Source/Checks/Curses-build/CMakeFiles/rebuild_cache.dir
