@@ -2,13 +2,12 @@ import math
 import mpc_math
 
 sfix.set_precision(16,32)
-
+rows = 14
+columns = 4
 ## NOTE: DATA columns in order from left to right are
 # Color, Outline, Dot, Shape
-
-
+# 0,     1,        2,   3
 def generateArray(rows,columns):
-
 
     p0_inputs = sint.Matrix(rows,columns)
     p0_inputs.input_from(0)
@@ -18,7 +17,7 @@ def generateArray(rows,columns):
 
     p2_inputs = sint.Matrix(rows,columns)
     p2_inputs.input_from(2)
-
+    #Large Array
     shamir_input = sint.Matrix((3*rows),columns)
 
     @for_range_parallel(3,[rows,columns])
@@ -28,4 +27,32 @@ def generateArray(rows,columns):
     	shamir_input[i+(rows*2)][j] = p2_inputs[i][j]
     return shamir_input
 
-CombinedInputs = generateArray(14,4)
+def first_entropy(CombinedInputs, shapeIndex,totalRows):
+    entropy = sfix.MemValue(0)
+    triangles = sint.MemValue(0)
+    squares = sint.MemValue(0)
+    @for_range_opt(totalRows)
+    def f(i):
+        #Load in value from InputArray
+        compvar = CombinedInputs[i][shapeIndex]
+		#sint(1) is the value for triangles in the dataset
+        f = (compvar == sint(1))
+        triangles.write(triangles+f)
+        squares.write(squares+(sint(1)-f))
+
+    x = sfix(sfix(triangles)/sfix(totalRows))
+    y = sfix(squares)/sfix(totalRows)
+    entropy.write((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
+
+    return entropy
+
+
+#Combine all 3 parties inputs into 1 single array for ease of use
+CombinedInputs = generateArray(rows,columns)
+totalRows = rows*3
+
+Shape_Entropy = sfix(0.0)
+#calculate the Entropy of the Shape Attirbute
+#3 is used at the second parameter because that is the column index for the shape attribute
+Shape_Entropy = first_entropy(CombinedInputs,3,totalRows)
+print_ln('Entropy of the Shape attribute is %s', Shape_Entropy.reveal())
