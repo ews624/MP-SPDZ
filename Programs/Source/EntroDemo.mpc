@@ -46,7 +46,110 @@ def first_entropy(CombinedInputs, shapeIndex,totalRows):
 
     return entropy
 
+#####
+#####
+#####
+#####
+#####
+#TODO GET GAIN AND SEC ENTROPY NEED TO BE CLEAN AND COMMENTED
+def get_gain(EntroValue,unique_vales,Comparison_Entropy,value_tracking_array,range):
+	sum_of_Entro = sfix.MemValue(0.0)
+	@for_range_opt(unique_vales)
+	def tr(i):
+		sum_of_Entro.write(((value_tracking_array[i]/range)*EntroValue[i])+ sum_of_Entro)
+	gain = Comparison_Entropy - sfix(sum_of_Entro)
+	return gain
 
+def attribute_gain(CombinedInputs,Comparison_Entropy,column_number,range):
+    value_tracking_array = Array(5,sfix)
+    value_tracking_array.assign_all(0)
+    lastint = sint(0)
+    skip = 0
+    x = sfix(0)
+    shape_array = Array(3,sfix)
+    shape_array.assign_all(0)
+
+    #I am doing some cheating here, knowing that we have only 3 unique values for our dataset
+    #I am just going to get track of them inidivually and hopefully it will be readable
+    onevar = sint.MemValue(0)
+    twovar = sint.MemValue(0)
+    threevar = sint.MemValue(0)
+
+    #Cheating again, here we are keeping track of one only shape of the at most 3 unique values
+    #we will later find the amount of the other shape using subtraction
+    oneshape = sint.MemValue(0)
+    twoshape = sint.MemValue(0)
+    threeshape = sint.MemValue(0)
+
+    gain = sfix(0.0)
+    unique_vales = sint.MemValue(1)
+    @for_range_opt(range)
+    def f(i):
+        compvar = CombinedInputs[i][column_number]
+        shape_value = CombinedInputs[i][3]
+        lastint = (shape_value == sint(1))
+
+        #Since we are only checking for upto 3 unique values we only need to compare upto 3
+        
+        f = (compvar == sint(1))
+        onevar.write(((onevar+1)*f)+  ((sint(1)-f)*onevar))
+        oneshape.write(((oneshape+lastint)*f)+  ((sint(1)-f)*oneshape))
+        f = (compvar == sint(2))
+        twovar.write(((twovar+1)*f) +((sint(1)-f)*twovar))
+        twoshape.write(((twoshape+lastint)*f) +((sint(1)-f)*twoshape))
+        f = (compvar == sint(3))
+        threevar.write(((threevar+1)*f)+((sint(1)-f)*threevar))
+        threeshape.write(((threeshape+lastint)*f)+((sint(1)-f)*threeshape))
+
+
+
+        #f = (compvar == sint(1))
+        #oneshape.write(((oneshape+lastint)*f)+  ((sint(1)-f)*oneshape))
+        #f = (compvar == sint(2))
+        #twoshape.write(((twoshape+lastint)*f) +((sint(1)-f)*twoshape))
+        #f = (compvar == sint(3))
+        #threeshape.write(((threeshape+lastint)*f)+((sint(1)-f)*threeshape))
+
+        f = (unique_vales < compvar)
+        unique_vales.write((compvar*f)+(unique_vales*(sint(1)-f)))
+
+        if((sint(0) < sint(1)).reveal()):
+            skip = 0
+
+
+    return_Array = Array(3,sfix)
+    value_tracking_array[0] = onevar
+    value_tracking_array[1] = twovar
+    value_tracking_array[2] = threevar
+
+    shape_array[0] = oneshape
+    shape_array[1] = twoshape
+    shape_array[2] = threeshape
+
+    @for_range_opt(unique_vales.reveal())
+    def W(i):
+        denom = value_tracking_array[i]
+        top = shape_array[i]
+        x = top/denom
+        difference = denom-top
+        y = difference/denom
+        partone = (x*mpc_math.log2_fx(x))
+        parttwo = (y*mpc_math.log2_fx(y))
+        return_Array[i] = (-partone)+(-parttwo)
+
+    gain = get_gain(return_Array,unique_vales.reveal(),Comparison_Entropy,value_tracking_array,range)
+    print_ln('Gain is %s',gain.reveal())
+    return gain
+#####
+#####
+#####
+#####
+#####
+#####
+#####
+#####
+#####
+#####
 #Combine all 3 parties inputs into 1 single array for ease of use
 CombinedInputs = generateArray(rows,columns)
 totalRows = rows*3
@@ -56,3 +159,21 @@ Shape_Entropy = sfix(0.0)
 #3 is used at the second parameter because that is the column index for the shape attribute
 Shape_Entropy = first_entropy(CombinedInputs,3,totalRows)
 print_ln('Entropy of the Shape attribute is %s', Shape_Entropy.reveal())
+
+
+
+
+gain_array = Array(3,sfix)
+@for_range_opt(3)
+def gainAll(i):
+	gain_array[i]= attribute_gain(CombinedInputs,Shape_Entropy,i,totalRows)
+
+f = sint(-1)
+largestGain = sfix.MemValue(0.0)
+maxindex = sint.MemValue(0)
+@for_range_opt(3)
+def _(i):
+	f = (largestGain < gain_array[i])
+	maxindex.write((f*i)+ (maxindex*(sint(1)-f)))
+	largestGain.write((gain_array[i]*f)+ (largestGain*(sint(1)-f)))
+print_ln('largest gain index is %s which is %s',maxindex.reveal(),gain_array[maxindex.reveal()].reveal())
