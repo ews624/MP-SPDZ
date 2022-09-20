@@ -8,6 +8,8 @@ columns = 4
 # Color, Outline, Dot, Shape
 # 0,     1,        2,   3
 
+#Color green =1 , yellow = 2, red =3
+
 class Tree:
 	def __init__(self):
 		self.left = None
@@ -89,13 +91,122 @@ def get_Entropy(CombinedInputs,column_number,range):
 
 	return Entropy_Array
 
-def get_Next_layer():
+
+def get_Next_layer(CombinedInputs,color_Entropy,totalRows):
+	#THIS whole process needs a better way to be done!!!!
+	#Maybe create new arrays that only have a certain color in it
 	print_ln('calculating Next layer')
 	outline_Entropy = Array(3,sfix)
 	dot_Entropy = Array(3,sfix)
+	red_outline_Entropy = sfix.MemValue(0)
+	red_dot_Entropy = sfix.MemValue(0)
 
-	outline_Entropy= get_Entropy(CombinedInputs,1,range)
-	dot_Entropy = get_Entropy(CombinedInputs,2,range)
+	red_total = sint.MemValue(0)
+	green_total = sint.MemValue(0)
+	yellow_total = sint.MemValue(0)
+
+	red_triangle = sint.MemValue(0)
+	green_triangle = sint.MemValue(0)
+	yellow_triangle = sint.MemValue(0)
+
+	red_triangle_dot = sint.MemValue(0)
+	green_triangle_dot = sint.MemValue(0)
+	yellow_triangle_dot = sint.MemValue(0)
+
+	red_outlined = sint.MemValue(0)
+	green_outlined = sint.MemValue(0)
+	yellow_outlined = sint.MemValue(0)
+
+	red_triangle_outline = sint.MemValue(0)
+	green_triangle_outline = sint.MemValue(0)
+	yellow_triangle_outline = sint.MemValue(0)
+
+
+	red_dotted = sint.MemValue(0)
+	green_dotted = sint.MemValue(0)
+	yellow_dotted = sint.MemValue(0)
+
+
+	@for_range_opt(totalRows)
+	def f(i):
+		outline = CombinedInputs[i][1]
+		dot = CombinedInputs[i][2]
+		shape = CombinedInputs[i][3]
+		color = CombinedInputs[i][0]
+
+		#Find by color
+		yellow = (color == sint(2))
+		red = (color == sint(3))
+		green = (color == sint(1))
+
+		yellow_total.write(yellow_total+ yellow)
+		red_total.write(red_total+red)
+		green_total.write(green_total+green)
+
+
+
+		#TODO
+		#WE NEED TO DO SOMETHING LIKE RED_TRIGANLE_DOT
+		#to make the code work for gain calculation
+
+
+
+		triangle = (shape ==sint(1))
+		red_triangle.write(red_triangle+(triangle*red))
+		green_triangle.write(green_triangle+(triangle*green))
+		yellow_triangle.write(yellow_triangle+(triangle*yellow))
+
+		dotted = (dot == sint(1))
+		red_dotted.write(red_dotted + (dotted *red))
+		green_dotted.write(green_dotted+(dotted*green))
+		yellow_dotted.write(yellow_dotted+(dotted*yellow))
+
+		red_triangle_dot.write(red_triangle_dot+(triangle*red*dotted))
+
+
+		outlined = (outline == sint(1))
+		red_outlined.write(red_outlined+(outlined*red))
+		green_outlined.write(green_outlined+(outlined*green))
+		yellow_outlined.write(yellow_outlined+(outlined*yellow))
+
+		red_triangle_outline.write(red_triangle_outline+(triangle*red*outlined))
+
+	print_ln('Total amount of red is %s',red_total.reveal())
+
+	#Red entropy calculates
+		#outline
+	x = sfix(sfix(red_outlined)/sfix(red_total))
+	difference = red_total - red_outlined
+	y = sfix(sfix(difference)/sfix(red_total))
+	red_outline_Entropy.write((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
+
+	print_ln('Red outline entropy is %s, red outlined is %s, red triangle outline is %s',red_outline_Entropy.reveal(), red_outlined.reveal(), red_triangle_outline.reveal())
+
+	x = sfix(red_triangle_outline)/sfix(red_outlined)
+	difference = red_outlined - red_triangle_outline
+	y = sfix(difference)/sfix(red_outlined)
+	temp = sfix((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
+
+
+
+
+	print_ln('Red triangle outline entropy is %s, x is %s, y is %s',temp.reveal(), x.reveal(),y.reveal())
+	red_gain = sfix(red_outline_Entropy)- sfix(temp)
+	print_ln('Red triangle outline gain is %s', red_gain.reveal())
+		#dotted
+	x = sfix(red_dotted)/sfix(red_total)
+	difference = red_total-red_dotted
+	y = sfix(difference)/sfix(red_total)
+	red_dot_Entropy.write((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
+	print_ln('Red dot entropy is %s',red_dot_Entropy.reveal())
+	x = sfix(red_triangle_dot)/sfix(red_dotted)
+	difference = red_dotted - red_triangle_dot
+	y = sfix(difference)/sfix(red_dotted)
+	temp = sfix((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
+	red_dot_Entropy.write(red_dot_Entropy- temp)
+	print_ln('Red temp is %s Red dot gain is %s',temp.reveal(),red_dot_Entropy.reveal())
+	root = Tree()
+
 
 def get_Color_Entropy(CombinedInputs,heuristic_column,range):
 	print_ln('Tree Building')
@@ -276,3 +387,5 @@ color_Entropy = Array(3,sfix)
 color_Entropy = get_Color_Entropy(CombinedInputs,maxindex.reveal(),totalRows)
 print_ln()
 print_ln()
+
+get_Next_layer(CombinedInputs,color_Entropy,totalRows)
