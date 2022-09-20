@@ -91,7 +91,11 @@ def get_Entropy(CombinedInputs,column_number,range):
 
 def get_Next_layer():
 	print_ln('calculating Next layer')
+	outline_Entropy = Array(3,sfix)
+	dot_Entropy = Array(3,sfix)
 
+	outline_Entropy= get_Entropy(CombinedInputs,1,range)
+	dot_Entropy = get_Entropy(CombinedInputs,2,range)
 
 def get_Color_Entropy(CombinedInputs,heuristic_column,range):
 	print_ln('Tree Building')
@@ -155,80 +159,81 @@ def get_gain(EntroValue,unique_vales,Comparison_Entropy,value_tracking_array,ran
 	return gain
 
 def attribute_gain(CombinedInputs,Comparison_Entropy,column_number,range):
-    value_tracking_array = Array(5,sfix)
-    value_tracking_array.assign_all(0)
-    lastint = sint(0)
-    skip = 0
-    shape_array = Array(3,sfix)
-    shape_array.assign_all(0)
+	Entropy_Array = Array(3,sfix)
+	value_tracking_array = Array(5,sfix)
+	value_tracking_array.assign_all(0)
+	lastint = sint(0)
+	skip = 0
+	shape_array = Array(3,sfix)
+	shape_array.assign_all(0)
 
     #I am doing some cheating here, knowing that we have only 3 unique values for our dataset
     #I am just going to get track of them inidivually and hopefully it will be readable
-    onevar = sint.MemValue(0)
-    twovar = sint.MemValue(0)
-    threevar = sint.MemValue(0)
+	onevar = sint.MemValue(0)
+	twovar = sint.MemValue(0)
+	threevar = sint.MemValue(0)
 
     #Cheating again, here we are keeping track of one only shape of the at most 3 unique values
     #we will later find the amount of the other shape using subtraction
-    oneshape = sint.MemValue(0)
-    twoshape = sint.MemValue(0)
-    threeshape = sint.MemValue(0)
+	oneshape = sint.MemValue(0)
+	twoshape = sint.MemValue(0)
+	threeshape = sint.MemValue(0)
 
-    gain = sfix(0.0)
-    unique_vales = sint.MemValue(1)
-    @for_range_opt(range)
-    def f(i):
-        compvar = CombinedInputs[i][column_number]
-        shape_value = CombinedInputs[i][3]
-        lastint = (shape_value == sint(1))
+	gain = sfix(0.0)
+	unique_vales = sint.MemValue(1)
+	@for_range_opt(range)
+	def f(i):
+		compvar = CombinedInputs[i][column_number]
+		shape_value = CombinedInputs[i][3]
+		lastint = (shape_value == sint(1))
 
         #Since we are only checking for upto 3 unique values we only need to compare upto 3 possibilities
 
-        f = (compvar == sint(1))
-        onevar.write(((onevar+1)*f)+  ((sint(1)-f)*onevar))
-        oneshape.write(((oneshape+lastint)*f)+  ((sint(1)-f)*oneshape))
-        f = (compvar == sint(2))
-        twovar.write(((twovar+1)*f) +((sint(1)-f)*twovar))
-        twoshape.write(((twoshape+lastint)*f) +((sint(1)-f)*twoshape))
-        f = (compvar == sint(3))
-        threevar.write(((threevar+1)*f)+((sint(1)-f)*threevar))
-        threeshape.write(((threeshape+lastint)*f)+((sint(1)-f)*threeshape))
+		f = (compvar == sint(1))
+		onevar.write(((onevar+1)*f)+  ((sint(1)-f)*onevar))
+		oneshape.write(((oneshape+lastint)*f)+  ((sint(1)-f)*oneshape))
+		f = (compvar == sint(2))
+		twovar.write(((twovar+1)*f) +((sint(1)-f)*twovar))
+		twoshape.write(((twoshape+lastint)*f) +((sint(1)-f)*twoshape))
+		f = (compvar == sint(3))
+		threevar.write(((threevar+1)*f)+((sint(1)-f)*threevar))
+		threeshape.write(((threeshape+lastint)*f)+((sint(1)-f)*threeshape))
 
-        f = (unique_vales < compvar)
-        unique_vales.write((compvar*f)+(unique_vales*(sint(1)-f)))
+		f = (unique_vales < compvar)
+		unique_vales.write((compvar*f)+(unique_vales*(sint(1)-f)))
 
         #This fixes a bug with the program
         #I don't understand but this fixes it
-        if((sint(0) < sint(1)).reveal()):
-            skip = 0
+		if((sint(0) < sint(1)).reveal()):
+			skip = 0
 
 
-    Entropy_Array = Array(3,sfix)
-    value_tracking_array[0] = onevar
-    value_tracking_array[1] = twovar
-    value_tracking_array[2] = threevar
 
-    shape_array[0] = oneshape
-    shape_array[1] = twoshape
-    shape_array[2] = threeshape
+	value_tracking_array[0] = onevar
+	value_tracking_array[1] = twovar
+	value_tracking_array[2] = threevar
+
+	shape_array[0] = oneshape
+	shape_array[1] = twoshape
+	shape_array[2] = threeshape
 
     #this calculates the entropy based on the 3 remaining attributes
     #since we only have 2 shapes to choose from, I am cheating again with partone and parttwo
     #
-    @for_range_opt(unique_vales.reveal())
-    def W(i):
-        denom = value_tracking_array[i]
-        top = shape_array[i]
-        x = top/denom
-        difference = denom-top
-        y = difference/denom
-        partone = (x*mpc_math.log2_fx(x))
-        parttwo = (y*mpc_math.log2_fx(y))
-        Entropy_Array[i] = (-partone)+(-parttwo)
+	@for_range_opt(unique_vales.reveal())
+	def W(i):
+		denom = value_tracking_array[i]
+		top = shape_array[i]
+		x = top/denom
+		difference = denom-top
+		y = difference/denom
+		partone = (x*mpc_math.log2_fx(x))
+		parttwo = (y*mpc_math.log2_fx(y))
+		Entropy_Array[i] = (-partone)+(-parttwo)
 
-    gain = get_gain(Entropy_Array,unique_vales.reveal(),Comparison_Entropy,value_tracking_array,range)
+	gain = get_gain(Entropy_Array,unique_vales.reveal(),Comparison_Entropy,value_tracking_array,range)
     #print_ln('Gain is %s',gain.reveal())
-    return gain
+	return gain
 
 #Combine all 3 parties inputs into 1 single array for ease of use
 CombinedInputs = generateArray(rows,columns)
