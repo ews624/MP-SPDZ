@@ -91,121 +91,187 @@ def get_Entropy(CombinedInputs,column_number,range):
 
 	return Entropy_Array
 
+def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,totalRows):
 
-def get_Next_layer(CombinedInputs,color_Entropy,totalRows):
+	###Need to refactoring
+	### Name Clean up and commenting
+	latestEntro = sfix.MemValue(0.0)
+	print_ln('in gainchecker num of squares is %s,triangles %s',squares.reveal(),triangles.reveal())
+
+	root.center = Tree()
+	root.right = Tree()
+
+	squares = sfix(squares)
+	triangles = sfix(triangles)
+	totalofColor = sfix(totalofColor)
+	x = sfix(squares/totalofColor)
+	y = sfix(triangles/totalofColor)
+	latestEntro = (-(x*mpc_math.log2_fx(x))-(y*(mpc_math.log2_fx(y))))
+	print_ln('latestEntro is %s',latestEntro.reveal())
+	totaldots = sint.MemValue(0)
+	totalundotted = sint.MemValue(0)
+	totaldashed = sint.MemValue(0)
+	totalundashed = sint.MemValue(0)
+	total = sfix.MemValue(0)
+	color = sint(ColorInt)
+
+	dashedTri = sint.MemValue(0)
+	solidTri = sint.MemValue(0)
+	dottedTri = sint.MemValue(0)
+	undotTri = sint.MemValue(0)
+	totalTri = sint.MemValue(0)
+
+	dashedSqu = sint.MemValue(0)
+	solidSqu = sint.MemValue(0)
+	dottedSqu = sint.MemValue(0)
+	undotSqu = sint.MemValue(0)
+	totalSqu = sint.MemValue(0)
+	#create deeper nodes
+	@for_range_opt(totalRows)
+	def _(i):
+
+		colorCheck = (CombinedInputs[i][0]== color)
+		triCheck = (CombinedInputs[i][3] == sint(1))
+		totalTri.write(totalTri+(colorCheck*triCheck))
+		totalSqu.write(totalSqu+(colorCheck*(sint(1)-triCheck)))
+
+		f = (sint(1)==CombinedInputs[i][2])
+		dottedTri.write(dottedTri+(colorCheck*f*triCheck))
+		dottedSqu.write(dottedSqu+(colorCheck*f*(sint(1)-triCheck)))
+
+		undotTri.write(undotTri+(colorCheck*(sint(1)-f)*triCheck))
+		undotSqu.write(undotSqu+(colorCheck*(sint(1)-f)*(sint(1)-triCheck)))
+
+		da = (sint(1)==CombinedInputs[i][1])
+		dashedTri.write(dashedTri+(colorCheck*da*triCheck))
+		dashedSqu.write(dashedSqu+(colorCheck*(sint(1)-triCheck)*da))
+
+		solidTri.write(solidTri+(colorCheck*(sint(1)-da)*triCheck))
+		solidSqu.write(solidSqu+(colorCheck*(sint(1)-da)*(sint(1)-triCheck)))
+
+
+		f = (sint(1)==CombinedInputs[i][2])
+		l = (f*colorCheck)
+		totaldots.write(totaldots+l)
+		l = (sint(1)-f)*colorCheck
+		totalundotted.write(totalundotted+l)
+
+		f = (sint(1)==CombinedInputs[i][1])
+		l = (f*colorCheck)
+		totaldashed.write(totaldashed+l)
+		f = (sint(1)-f)*colorCheck
+		totalundashed.write(totalundashed+f)
+
+		total.write(total+colorCheck)
+
+
+	outlineTri = sfix(dashedTri)
+	outlineTotal = sfix(dashedTri+dashedSqu)
+
+	outlineSqu = sfix(dashedSqu)
+
+	print_ln('outline tri is %s, outline total is %s',outlineTri.reveal(),outlineTotal.reveal())
+
+	x = sfix(outlineTri/outlineTotal)
+	y = sfix(outlineSqu/outlineTotal)
+	partone = -(x*mpc_math.log2_fx(x))
+	parttwo = -(y*mpc_math.log2_fx(y))
+	entroOne = (partone+parttwo)
+	###
+	####Need to do the second part of entropy checking
+	###
+	###
+	###
+	print_ln('entroOne is %s',entroOne.reveal())
+	print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
+	totalItems = totalTri + totalSqu
+	allSolid = solidTri + solidSqu
+	allDashed = dashedSqu + dashedTri
+	print_ln('total items is %s and allsolids is %s',totalItems.reveal(),allSolid.reveal())
+	print_ln('all dashed is %s',allDashed.reveal())
+
+
+
+	dottedX = sfix(dottedTri)
+	dottedBot = sfix(dottedTri+dottedSqu)
+	dottedY = sfix(dottedSqu)
+	x =sfix(dottedX/dottedBot)
+	y = sfix(dottedY/dottedBot)
+	partone = -(x*mpc_math.log2_fx(x))
+	parttwo = -(y*mpc_math.log2_fx(y))
+	entrotwo = (partone+parttwo)
+	print_ln('dotted tri"s is %s, dotted square is %s',dottedX.reveal(),dottedY.reveal())
+	entrotwo = sfix(entrotwo*sfix(sfix(dottedBot)/sfix(total)))
+	undotX = sfix(undotTri)
+	undotBot = sfix(undotTri+undotSqu)
+	undotY = sfix(undotSqu)
+	x =sfix(undotX/undotBot)
+	y = sfix(undotY/undotBot)
+	partone = -(x*mpc_math.log2_fx(x))
+	parttwo = -(y*mpc_math.log2_fx(y))
+	entrotwo = entrotwo + (sfix(undotBot)/sfix(total)*(sfix(partone)+sfix(parttwo)))
+	print_ln('entrotwo is %s',entrotwo.reveal())
+	print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
+
+
+
+	###Need to do gain checking
+	###
+	###
+	###
+
+
+	f = (entroOne > entrotwo)
+	mover = ((f*entroOne)+(entrotwo*(1-f)))
+	root.center.data = mover.reveal()
+	mover = (((1-f)*entroOne)+(f*entrotwo))
+	root.right.data = mover.reveal()
+
+def get_Next_layer(CombinedInputs,color_Entropy,totalRows,ColorInt,root):
 	#THIS whole process needs a better way to be done!!!!
-	#Maybe create new arrays that only have a certain color in it
-	print_ln('calculating Next layer')
-	outline_Entropy = Array(3,sfix)
-	dot_Entropy = Array(3,sfix)
-	red_outline_Entropy = sfix.MemValue(0)
-	red_dot_Entropy = sfix.MemValue(0)
+	#
+	#ColorInt is just the integar value for the colors in the CombinedInputs array
 
-	red_total = sint.MemValue(0)
-	green_total = sint.MemValue(0)
-	yellow_total = sint.MemValue(0)
+	###
+	###
+	###Function needs commenting
+	###
+	###
 
-	red_triangle = sint.MemValue(0)
-	green_triangle = sint.MemValue(0)
-	yellow_triangle = sint.MemValue(0)
+	f = sint(-1)
+	smallestEntro = sfix.MemValue(10.0)
+	smallestindex = sint.MemValue(100)
+	print_ln('')
 
-	red_triangle_dot = sint.MemValue(0)
-	green_triangle_dot = sint.MemValue(0)
-	yellow_triangle_dot = sint.MemValue(0)
+	@for_range_opt(3)
+	def _(i):
+		small_Entropy = (smallestEntro > color_Entropy[i])
+		smallestindex.write((small_Entropy*i)+ (smallestindex*(sint(1)-small_Entropy)))
+		smallestEntro.write((color_Entropy[i]*small_Entropy)+ (smallestEntro*(sint(1)-small_Entropy)))
 
-	red_outlined = sint.MemValue(0)
-	green_outlined = sint.MemValue(0)
-	yellow_outlined = sint.MemValue(0)
+	#print_ln('smallest index is %s which is %s',smallestindex.reveal(),allEntro[smallestindex.reveal()].reveal())
+	root.left = Tree()
 
-	red_triangle_outline = sint.MemValue(0)
-	green_triangle_outline = sint.MemValue(0)
-	yellow_triangle_outline = sint.MemValue(0)
-
-
-	red_dotted = sint.MemValue(0)
-	green_dotted = sint.MemValue(0)
-	yellow_dotted = sint.MemValue(0)
-
+	#yellow = 2
+	#green = 1
+	#red = 3
+	squares = sint.MemValue(0)
+	triangles = sint.MemValue(0)
+	totalcolor = sint.MemValue(0)
 
 	@for_range_opt(totalRows)
-	def f(i):
-		outline = CombinedInputs[i][1]
-		dot = CombinedInputs[i][2]
-		shape = CombinedInputs[i][3]
-		color = CombinedInputs[i][0]
+	def _(j):
+		color_comparison = (ColorInt ==CombinedInputs[j][0])
+		totalcolor.write(((totalcolor+1)*color_comparison)+(totalcolor*(sint(1)-color_comparison)))
+		square = (sint(2) == CombinedInputs[j][3])
+		squares.write(squares + (color_comparison*square))
+		triangle = (sint(1) == CombinedInputs[j][3])
+		triangles.write(triangles+(triangle*color_comparison))
 
-		#Find by color
-		yellow = (color == sint(2))
-		red = (color == sint(3))
-		green = (color == sint(1))
+	gainChecker(squares,triangles,totalcolor,root,CombinedInputs,ColorInt,totalRows)
+	root.left.data = smallestEntro.reveal()
 
-		yellow_total.write(yellow_total+ yellow)
-		red_total.write(red_total+red)
-		green_total.write(green_total+green)
-
-
-
-		#TODO
-		#WE NEED TO DO SOMETHING LIKE RED_TRIGANLE_DOT
-		#to make the code work for gain calculation
-
-
-
-		triangle = (shape ==sint(1))
-		red_triangle.write(red_triangle+(triangle*red))
-		green_triangle.write(green_triangle+(triangle*green))
-		yellow_triangle.write(yellow_triangle+(triangle*yellow))
-
-		dotted = (dot == sint(1))
-		red_dotted.write(red_dotted + (dotted *red))
-		green_dotted.write(green_dotted+(dotted*green))
-		yellow_dotted.write(yellow_dotted+(dotted*yellow))
-
-		red_triangle_dot.write(red_triangle_dot+(triangle*red*dotted))
-
-
-		outlined = (outline == sint(1))
-		red_outlined.write(red_outlined+(outlined*red))
-		green_outlined.write(green_outlined+(outlined*green))
-		yellow_outlined.write(yellow_outlined+(outlined*yellow))
-
-		red_triangle_outline.write(red_triangle_outline+(triangle*red*outlined))
-
-	print_ln('Total amount of red is %s',red_total.reveal())
-
-	#Red entropy calculates
-		#outline
-	x = sfix(sfix(red_outlined)/sfix(red_total))
-	difference = red_total - red_outlined
-	y = sfix(sfix(difference)/sfix(red_total))
-	red_outline_Entropy.write((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
-
-	print_ln('Red outline entropy is %s, red outlined is %s, red triangle outline is %s',red_outline_Entropy.reveal(), red_outlined.reveal(), red_triangle_outline.reveal())
-
-	x = sfix(red_triangle_outline)/sfix(red_outlined)
-	difference = red_outlined - red_triangle_outline
-	y = sfix(difference)/sfix(red_outlined)
-	temp = sfix((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
-
-
-
-
-	print_ln('Red triangle outline entropy is %s, x is %s, y is %s',temp.reveal(), x.reveal(),y.reveal())
-	red_gain = sfix(red_outline_Entropy)- sfix(temp)
-	print_ln('Red triangle outline gain is %s', red_gain.reveal())
-		#dotted
-	x = sfix(red_dotted)/sfix(red_total)
-	difference = red_total-red_dotted
-	y = sfix(difference)/sfix(red_total)
-	red_dot_Entropy.write((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
-	print_ln('Red dot entropy is %s',red_dot_Entropy.reveal())
-	x = sfix(red_triangle_dot)/sfix(red_dotted)
-	difference = red_dotted - red_triangle_dot
-	y = sfix(difference)/sfix(red_dotted)
-	temp = sfix((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
-	red_dot_Entropy.write(red_dot_Entropy- temp)
-	print_ln('Red temp is %s Red dot gain is %s',temp.reveal(),red_dot_Entropy.reveal())
-	root = Tree()
+	return smallestindex
 
 
 def get_Color_Entropy(CombinedInputs,heuristic_column,range):
@@ -387,5 +453,14 @@ color_Entropy = Array(3,sfix)
 color_Entropy = get_Color_Entropy(CombinedInputs,maxindex.reveal(),totalRows)
 print_ln()
 print_ln()
+root = Tree()
+root.data = 'Color'
+root.left = Tree()
+root.center = Tree()
+root.center.Attirbute = "Green"
+root.right = Tree()
+get_Next_layer(CombinedInputs,color_Entropy,totalRows,1,root.center)
 
-get_Next_layer(CombinedInputs,color_Entropy,totalRows)
+#get_Next_layer(CombinedInputs,color_Entropy,totalRows,2,root.left)
+
+#get_Next_layer(CombinedInputs,color_Entropy,totalRows,3,root.right)
