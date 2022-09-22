@@ -91,14 +91,14 @@ def get_Entropy(CombinedInputs,column_number,range):
 
 	return Entropy_Array
 
-def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,totalRows):
+def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,totalRows,color_Entropy):
 
 	###Need to refactoring
 	### Name Clean up and commenting
 	latestEntro = sfix.MemValue(0.0)
 	print_ln('in gainchecker num of squares is %s,triangles %s',squares.reveal(),triangles.reveal())
 
-	root.center = Tree()
+	root.left = Tree()
 	root.right = Tree()
 
 	squares = sfix(squares)
@@ -167,21 +167,37 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 
 	outlineTri = sfix(dashedTri)
 	outlineTotal = sfix(dashedTri+dashedSqu)
-
 	outlineSqu = sfix(dashedSqu)
-
-	print_ln('outline tri is %s, outline total is %s',outlineTri.reveal(),outlineTotal.reveal())
 
 	x = sfix(outlineTri/outlineTotal)
 	y = sfix(outlineSqu/outlineTotal)
+
 	partone = -(x*mpc_math.log2_fx(x))
 	parttwo = -(y*mpc_math.log2_fx(y))
-	entroOne = (partone+parttwo)
+
+	completed = sfix(partone+parttwo)
+	completed = completed *sfix(sfix(sfix(outlineTotal)/sfix(total)))
+	entroOne = sfix(completed)
+
+	print_ln('outline tri is %s, outline total is %s',outlineTri.reveal(),outlineTotal.reveal())
 	###
 	####Need to do the second part of entropy checking
 	###
-	###
-	###
+
+
+	solidTotal = sfix(sfix(solidSqu)+sfix(solidTri))
+
+	x = sfix(solidTri)/sfix(solidTotal)
+	y = sfix(solidSqu)/sfix(solidTotal)
+
+	partone = -(x*mpc_math.log2_fx(x))
+	parttwo = -(y*mpc_math.log2_fx(y))
+
+	completed = sfix(partone+parttwo)
+	completed = completed * sfix(sfix(sfix(solidTotal)/sfix(total)))
+
+
+	entroOne = entroOne+ completed
 	print_ln('entroOne is %s',entroOne.reveal())
 	print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
 	totalItems = totalTri + totalSqu
@@ -215,16 +231,17 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 
 
 
-	###Need to do gain checking
-	###
-	###
-	###
+
+	gainOne = sfix(color_Entropy[ColorInt-1] - entroOne)
+	gainTwo = sfix(color_Entropy[ColorInt-1] - entrotwo)
 
 
-	f = (entroOne > entrotwo)
-	mover = ((f*entroOne)+(entrotwo*(1-f)))
-	root.center.data = mover.reveal()
-	mover = (((1-f)*entroOne)+(f*entrotwo))
+	###Fix, need to build tree by biggest gain
+	### all this does is track the gains
+	f = (gainOne > gainTwo)
+	mover = ((f*gainOne)+(gainTwo*(1-f)))
+	root.left.data = mover.reveal()
+	mover = (((1-f)*gainOne)+(f*gainTwo))
 	root.right.data = mover.reveal()
 
 def get_Next_layer(CombinedInputs,color_Entropy,totalRows,ColorInt,root):
@@ -237,20 +254,7 @@ def get_Next_layer(CombinedInputs,color_Entropy,totalRows,ColorInt,root):
 	###Function needs commenting
 	###
 	###
-
-	f = sint(-1)
-	smallestEntro = sfix.MemValue(10.0)
-	smallestindex = sint.MemValue(100)
 	print_ln('')
-
-	@for_range_opt(3)
-	def _(i):
-		small_Entropy = (smallestEntro > color_Entropy[i])
-		smallestindex.write((small_Entropy*i)+ (smallestindex*(sint(1)-small_Entropy)))
-		smallestEntro.write((color_Entropy[i]*small_Entropy)+ (smallestEntro*(sint(1)-small_Entropy)))
-
-	#print_ln('smallest index is %s which is %s',smallestindex.reveal(),allEntro[smallestindex.reveal()].reveal())
-	root.left = Tree()
 
 	#yellow = 2
 	#green = 1
@@ -268,10 +272,9 @@ def get_Next_layer(CombinedInputs,color_Entropy,totalRows,ColorInt,root):
 		triangle = (sint(1) == CombinedInputs[j][3])
 		triangles.write(triangles+(triangle*color_comparison))
 
-	gainChecker(squares,triangles,totalcolor,root,CombinedInputs,ColorInt,totalRows)
-	root.left.data = smallestEntro.reveal()
+	gainChecker(squares,triangles,totalcolor,root,CombinedInputs,ColorInt,totalRows,color_Entropy)
 
-	return smallestindex
+
 
 
 def get_Color_Entropy(CombinedInputs,heuristic_column,range):
@@ -457,10 +460,13 @@ root = Tree()
 root.data = 'Color'
 root.left = Tree()
 root.center = Tree()
-root.center.Attirbute = "Green"
 root.right = Tree()
+
+root.center.Attirbute = "Green"
 get_Next_layer(CombinedInputs,color_Entropy,totalRows,1,root.center)
 
-#get_Next_layer(CombinedInputs,color_Entropy,totalRows,2,root.left)
+root.left.Attirbute = "Yellow"
+get_Next_layer(CombinedInputs,color_Entropy,totalRows,2,root.left)
 
-#get_Next_layer(CombinedInputs,color_Entropy,totalRows,3,root.right)
+root.right.attribute = "Red"
+get_Next_layer(CombinedInputs,color_Entropy,totalRows,3,root.right)
