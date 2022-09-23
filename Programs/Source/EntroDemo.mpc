@@ -18,8 +18,30 @@ class Tree:
 		self.attribute = None
 		self.data = None
 
+def generateArray(rows,columns):
+
+    p0_inputs = sint.Matrix(rows,columns)
+    p0_inputs.input_from(0)
+
+    p1_inputs = sint.Matrix(rows,columns)
+    p1_inputs.input_from(1)
+
+    p2_inputs = sint.Matrix(rows,columns)
+    p2_inputs.input_from(2)
+    #Large Array
+    CombinedInputs = sint.Matrix((3*rows),columns)
+
+    @for_range_parallel(3,[rows,columns])
+    def hi(i,j):
+    	CombinedInputs[i][j] = p0_inputs[i][j]
+		#By adding rows we offeset the start point for inputing data into the CombinedInputs array
+    	CombinedInputs[i+rows][j] = p1_inputs[i][j]
+    	CombinedInputs[i+(rows*2)][j] = p2_inputs[i][j]
+    return CombinedInputs
+
+
 def get_Entropy(CombinedInputs,column_number,range):
-	value_tracking_array = Array(5,sfix)
+	value_tracking_array = Array(3,sfix)
 	value_tracking_array.assign_all(0)
 	lastint = sint(0)
 	skip = 0
@@ -95,19 +117,14 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 
 	###Need to refactoring
 	### Name Clean up and commenting
-	latestEntro = sfix.MemValue(0.0)
 	print_ln('in gainchecker num of squares is %s,triangles %s',squares.reveal(),triangles.reveal())
-
-	root.left = Tree()
-	root.right = Tree()
 
 	squares = sfix(squares)
 	triangles = sfix(triangles)
 	totalofColor = sfix(totalofColor)
-	x = sfix(squares/totalofColor)
-	y = sfix(triangles/totalofColor)
-	latestEntro = (-(x*mpc_math.log2_fx(x))-(y*(mpc_math.log2_fx(y))))
-	print_ln('latestEntro is %s',latestEntro.reveal())
+
+	#here we are keeping track of every possible attribute and the times they occur
+	#this is pretty inefficient but I don't know a better way :(
 	totaldots = sint.MemValue(0)
 	totalundotted = sint.MemValue(0)
 	totaldashed = sint.MemValue(0)
@@ -126,7 +143,7 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 	dottedSqu = sint.MemValue(0)
 	undotSqu = sint.MemValue(0)
 	totalSqu = sint.MemValue(0)
-	#create deeper nodes
+	#find what occurs in each color so that we can find the gain of the attribute
 	@for_range_opt(totalRows)
 	def _(i):
 
@@ -135,12 +152,17 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 		totalTri.write(totalTri+(colorCheck*triCheck))
 		totalSqu.write(totalSqu+(colorCheck*(sint(1)-triCheck)))
 
-		f = (sint(1)==CombinedInputs[i][2])
-		dottedTri.write(dottedTri+(colorCheck*f*triCheck))
-		dottedSqu.write(dottedSqu+(colorCheck*f*(sint(1)-triCheck)))
+		dot = (sint(1)==CombinedInputs[i][2])
+		dottedTri.write(dottedTri+(colorCheck*dot*triCheck))
+		dottedSqu.write(dottedSqu+(colorCheck*dot*(sint(1)-triCheck)))
 
-		undotTri.write(undotTri+(colorCheck*(sint(1)-f)*triCheck))
-		undotSqu.write(undotSqu+(colorCheck*(sint(1)-f)*(sint(1)-triCheck)))
+		undotTri.write(undotTri+(colorCheck*(sint(1)-dot)*triCheck))
+		undotSqu.write(undotSqu+(colorCheck*(sint(1)-dot)*(sint(1)-triCheck)))
+
+		dot_same_color = (dot*colorCheck)
+		totaldots.write(totaldots+dot_same_color)
+		nodot_same_color = (sint(1)-dot)*colorCheck
+		totalundotted.write(totalundotted+nodot_same_color)
 
 		da = (sint(1)==CombinedInputs[i][1])
 		dashedTri.write(dashedTri+(colorCheck*da*triCheck))
@@ -149,18 +171,10 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 		solidTri.write(solidTri+(colorCheck*(sint(1)-da)*triCheck))
 		solidSqu.write(solidSqu+(colorCheck*(sint(1)-da)*(sint(1)-triCheck)))
 
-
-		f = (sint(1)==CombinedInputs[i][2])
-		l = (f*colorCheck)
-		totaldots.write(totaldots+l)
-		l = (sint(1)-f)*colorCheck
-		totalundotted.write(totalundotted+l)
-
-		f = (sint(1)==CombinedInputs[i][1])
-		l = (f*colorCheck)
+		l = (da*colorCheck)
 		totaldashed.write(totaldashed+l)
-		f = (sint(1)-f)*colorCheck
-		totalundashed.write(totalundashed+f)
+		da = (sint(1)-da)*colorCheck
+		totalundashed.write(totalundashed+da)
 
 		total.write(total+colorCheck)
 
@@ -180,10 +194,6 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 	entroOne = sfix(completed)
 
 	print_ln('outline tri is %s, outline total is %s',outlineTri.reveal(),outlineTotal.reveal())
-	###
-	####Need to do the second part of entropy checking
-	###
-
 
 	solidTotal = sfix(sfix(solidSqu)+sfix(solidTri))
 
@@ -205,7 +215,7 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 	allDashed = dashedSqu + dashedTri
 	print_ln('total items is %s and allsolids is %s',totalItems.reveal(),allSolid.reveal())
 	print_ln('all dashed is %s',allDashed.reveal())
-
+	print_ln('')
 
 
 	dottedX = sfix(dottedTri)
@@ -228,7 +238,7 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 	entrotwo = entrotwo + (sfix(undotBot)/sfix(total)*(sfix(partone)+sfix(parttwo)))
 	print_ln('entrotwo is %s',entrotwo.reveal())
 	print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
-
+	print_ln('')
 
 
 
@@ -237,23 +247,14 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 
 
 	###Fix, need to build tree by biggest gain
-	### all this does is track the gains
+	### all this does is track the biggest gain
 	f = (gainOne > gainTwo)
 	mover = ((f*gainOne)+(gainTwo*(1-f)))
-	root.left.data = mover.reveal()
-	mover = (((1-f)*gainOne)+(f*gainTwo))
-	root.right.data = mover.reveal()
+	root.data = mover.reveal()
 
 def get_Next_layer(CombinedInputs,color_Entropy,totalRows,ColorInt,root):
 	#THIS whole process needs a better way to be done!!!!
-	#
 	#ColorInt is just the integar value for the colors in the CombinedInputs array
-
-	###
-	###
-	###Function needs commenting
-	###
-	###
 	print_ln('')
 
 	#yellow = 2
@@ -263,6 +264,7 @@ def get_Next_layer(CombinedInputs,color_Entropy,totalRows,ColorInt,root):
 	triangles = sint.MemValue(0)
 	totalcolor = sint.MemValue(0)
 
+	#This for loop is for counting the triangles and squares in each different color
 	@for_range_opt(totalRows)
 	def _(j):
 		color_comparison = (ColorInt ==CombinedInputs[j][0])
@@ -289,25 +291,6 @@ def get_Color_Entropy(CombinedInputs,heuristic_column,range):
 
 	return Entropy_Array
 
-def generateArray(rows,columns):
-
-    p0_inputs = sint.Matrix(rows,columns)
-    p0_inputs.input_from(0)
-
-    p1_inputs = sint.Matrix(rows,columns)
-    p1_inputs.input_from(1)
-
-    p2_inputs = sint.Matrix(rows,columns)
-    p2_inputs.input_from(2)
-    #Large Array
-    shamir_input = sint.Matrix((3*rows),columns)
-
-    @for_range_parallel(3,[rows,columns])
-    def hi(i,j):
-    	shamir_input[i][j] = p0_inputs[i][j]
-    	shamir_input[i+rows][j] = p1_inputs[i][j]
-    	shamir_input[i+(rows*2)][j] = p2_inputs[i][j]
-    return shamir_input
 
 def first_entropy(CombinedInputs, shapeIndex,totalRows):
     entropy = sfix.MemValue(0)
@@ -321,7 +304,7 @@ def first_entropy(CombinedInputs, shapeIndex,totalRows):
         f = (compvar == sint(1))
         triangles.write(triangles+f)
         squares.write(squares+(sint(1)-f))
-
+	#this is the formula to find entropy from the slides
     x = sfix(sfix(triangles)/sfix(totalRows))
     y = sfix(squares)/sfix(totalRows)
     entropy.write((-x*(mpc_math.log2_fx(x)))+(-y*(mpc_math.log2_fx(y))))
@@ -340,7 +323,7 @@ def get_gain(EntroValue,unique_vales,Comparison_Entropy,value_tracking_array,ran
 
 def attribute_gain(CombinedInputs,Comparison_Entropy,column_number,range):
 	Entropy_Array = Array(3,sfix)
-	value_tracking_array = Array(5,sfix)
+	value_tracking_array = Array(3,sfix)
 	value_tracking_array.assign_all(0)
 	lastint = sint(0)
 	skip = 0
@@ -348,12 +331,12 @@ def attribute_gain(CombinedInputs,Comparison_Entropy,column_number,range):
 	shape_array.assign_all(0)
 
     #I am doing some cheating here, knowing that we have only 3 unique values for our dataset
-    #I am just going to get track of them inidivually and hopefully it will be readable
+    #I am just going to get track of them inidivually and hopefully it will be more readable
 	onevar = sint.MemValue(0)
 	twovar = sint.MemValue(0)
 	threevar = sint.MemValue(0)
 
-    #Cheating again, here we are keeping track of one only shape of the at most 3 unique values
+    #Cheating again, here we are keeping track of one of the two shapes, for at most 3 unique valuesc for color
     #we will later find the amount of the other shape using subtraction
 	oneshape = sint.MemValue(0)
 	twoshape = sint.MemValue(0)
@@ -379,6 +362,7 @@ def attribute_gain(CombinedInputs,Comparison_Entropy,column_number,range):
 		threevar.write(((threevar+1)*f)+((sint(1)-f)*threevar))
 		threeshape.write(((threeshape+lastint)*f)+((sint(1)-f)*threeshape))
 
+		#here we are pretending that I'm not cheating and that all values will be seen and are in numerical order with no gaps
 		f = (unique_vales < compvar)
 		unique_vales.write((compvar*f)+(unique_vales*(sint(1)-f)))
 
@@ -399,7 +383,6 @@ def attribute_gain(CombinedInputs,Comparison_Entropy,column_number,range):
 
     #this calculates the entropy based on the 3 remaining attributes
     #since we only have 2 shapes to choose from, I am cheating again with partone and parttwo
-    #
 	@for_range_opt(unique_vales.reveal())
 	def W(i):
 		denom = value_tracking_array[i]
@@ -415,13 +398,24 @@ def attribute_gain(CombinedInputs,Comparison_Entropy,column_number,range):
     #print_ln('Gain is %s',gain.reveal())
 	return gain
 
+
+
+
+
+
+
+
+
+
 #Combine all 3 parties inputs into 1 single array for ease of use
 CombinedInputs = generateArray(rows,columns)
+#Since we have 3 parties with equal amount of entries, we can just do this
 totalRows = rows*3
 
-Shape_Entropy = sfix(0.0)
+
 #calculate the Entropy of the Shape Attirbute
 #3 is used at the second parameter because that is the column index for the shape attribute
+Shape_Entropy = sfix(0.0)
 Shape_Entropy = first_entropy(CombinedInputs,3,totalRows)
 print_ln('Entropy of the Shape attribute is %s', Shape_Entropy.reveal())
 print_ln()
@@ -438,6 +432,7 @@ print_ln("The Dot attribute has a gain of %s", gain_array[2].reveal())
 print_ln()
 print_ln()
 
+#This is for finding the largest gain securely without revealing its value to the parties
 f = sint(-1)
 largestGain = sfix.MemValue(0.0)
 maxindex = sint.MemValue(0)
