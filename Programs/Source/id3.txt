@@ -1,0 +1,204 @@
+from cProfile import label
+import math
+import mpc_math
+import Compiler.library
+
+sfix.set_precision(16, 32)
+
+# ASSUMPTIONS
+# 1) The number of samples (rows) is public
+# 2) The number of features (cols) is public
+# 3) The number of categories per feature is public
+
+num_features = 4
+num_samples = 14
+num_categories_per_feature = [3, 2, 2, 2]
+
+class Tree:
+    def __init__(self, feature_idx, node_type, data, data_mask, feature_mask):
+        self.children = []
+        self.I = initialEntropy(data)
+        self.data = data
+        self.feature_mask = feature_mask
+        self.feature_idx = feature_idx
+        self.node_type = node_type
+        self.data_masks = sint.Matrix(num_samples, max(num_categories_per_feature))
+        @for_range_opt(num_samples)
+        def _(i):
+            @for_range_opt(max(num_categories_per_feature))
+            def _(j):
+                self.data_masks[i][j] = data_mask[i]
+
+    def createChildren(self):
+        if self.node_type == 'leaf':
+            return
+        
+        self.data_masks, feature_idx, gain = chooseBestFeature(self.I, self.data, self.data_masks, self.feature_mask)
+        print_ln('I=%s', self.I.reveal())
+        print_ln('best feature=%s', feature_idx.reveal())
+        print_ln('gain = %s', gain.reveal())
+        print_data_masks(self.data_masks)
+        for i in range(num_categories_per_feature[feature_idx.reveal()]):
+            pass
+
+
+def combineInput():
+    # Data columns are
+    # Color,     Outline,     Dot,     Shape
+    # 0 = green  0 = dashed   0 = no   0 = triangle
+    # 1 = yellow 1 = solid    1 = yes  1 = square
+    # 2 = red
+    input = sint.Matrix(num_samples, num_features)
+    input.input_from(0)
+
+    return input
+
+def calc_num_attributes():
+    pass
+
+def initialEntropy(data_matrix):
+    entropy = sfix.MemValue(0)
+    label_counts = sfix.Array(num_categories_per_feature[-1])
+    label_ratios = sfix.Array(num_categories_per_feature[-1])
+
+    @for_range_opt(num_samples)
+    def _(i):
+        @for_range_opt(num_categories_per_feature[-1])
+        def _(j):
+            label_counts[j] = label_counts[j] + (data_matrix[i][-1] == j).if_else(sint(1), sint(0))
+    
+    label_ratios.assign(label_counts / num_samples)
+
+    @for_range_opt(num_categories_per_feature[-1])
+    def _(i):
+        entropy.write(entropy + (-label_ratios[i] * (mpc_math.log2_fx(label_ratios[i]))))
+
+    return entropy
+
+# Calculate the residual of a feature index by feature index
+def residual(data_matrix, data_masks, feature_idx, num_categories):
+    # Array to hold entropy for each category belonging to this feature
+    cat_entropy = sfix.Array(num_categories)
+
+    cat_counts = sfix.Array(num_categories)
+    # A matrix storing the counts of how many labels belong to a category
+    cat_counts_by_label = sfix.Matrix(num_categories, num_categories_per_feature[-1])
+    # label_counts / num_rows
+    cat_ratios_by_label = sfix.Matrix(num_categories, num_categories_per_feature[-1])
+
+    mask = sfix.MemValue(0)
+    cat_entropy.assign_all(sfix(0))
+    cat_counts.assign_all(sfix(0))
+    cat_counts_by_label.assign_all(sfix(0))
+
+    new_data_masks = sint.Matrix(num_samples, max(num_categories_per_feature))
+    new_data_masks.assign_all(sint(0))
+
+    @for_range_opt(num_samples)
+    def _(i):
+        @for_range_opt(num_categories)
+        def _(j):
+            # Mask checks what category the sample is
+            # Create a mask to choose only to add the label when the sample is the correct category
+            mask.write(data_masks[i][j] * (data_matrix[i][feature_idx] == j).if_else(sint(1), sint(0)))
+            new_data_masks[i][j] = new_data_masks[i][j] + mask
+            cat_counts[j] = cat_counts[j] + mask
+            @for_range_opt(num_categories_per_feature[-1])
+            def _(k):
+                # Update the count for what label is associated with this sample
+                cat_counts_by_label[j][k] = cat_counts_by_label[j][k] + mask * (data_matrix[i][-1] == k).if_else(sint(1), sint(0))
+
+    @for_range_opt(num_categories)
+    def _(i):
+        @for_range_opt(num_categories_per_feature[-1])
+        def _(j):
+            cat_ratios_by_label[i][j] = cat_counts_by_label[i][j] / cat_counts[i]
+
+
+    # Entropy calculation for each category
+    @for_range_opt(num_categories)
+    def _(i):
+        @for_range_opt(num_categories_per_feature[-1])
+        def _(j):
+            cat_entropy[i] = cat_entropy[i] + (-cat_ratios_by_label[i][j] * (mpc_math.log2_fx(cat_ratios_by_label[i][j])))
+
+    print_ln('cat_counts=%s', cat_counts.reveal())
+
+    @for_range_opt(num_categories)
+    def _(i):
+        print_ln('cat_counts_by_label[i]=%s', cat_counts_by_label[i].reveal())
+        print_ln('cat_ratios_by_label[i]=%s', cat_ratios_by_label[i].reveal())
+
+    # Calculate the residual entropy
+    I_res = sfix.MemValue(0)
+    @for_range_opt(num_categories)
+    def _(i):
+        I_res.write(I_res + (cat_counts[i] / num_samples) * cat_entropy[i])
+
+    return I_res, new_data_masks
+
+def chooseBestFeature(I, data, data_masks, feature_mask):
+    flag = sint.MemValue(0)
+
+    # Values for the max residual, and the new data mask matrix that comes along with it
+    # The highest residual is the highest gain
+    gain = sfix.MemValue(0)
+    max_feature_idx = sint.MemValue(-1)
+    max_gain = sfix.MemValue(-1)
+    max_data_masks = sint.Matrix(num_samples, max(num_categories_per_feature))
+    max_data_masks.assign_all(sint(0))
+
+    # The features chosen will be revealed in the model anyway so we don't need to hide which one was chosen
+
+    @for_range_opt(num_features - 1)
+    def _(i):
+        @if_e(feature_mask[i] == 1)
+        def _():
+            I_res, new_data_masks = residual(data, data_masks, i, num_categories_per_feature[0])
+            # print_data_masks(new_data_masks)
+            gain.write(I - I_res.read())
+
+            # print_ln('I_res = %s', I_res.reveal())
+            # print_ln('I - I_res = %s', gain.reveal())
+
+            # Flag is a variable storing 1 if I_res is larger than the previous max_residual, otherwise 0
+            flag.write(gain.read() > max_gain.read()).if_else(sint(1), sint(0))
+            # Obliviously update what the max_residual, feature_mask, and data_mask will be if this is the max gain
+            max_gain.write((flag * gain) + ((1 - flag) * max_gain))
+            max_feature_idx.write(flag * i + (1 - flag) * max_feature_idx)
+            @for_range_opt(num_samples)
+            def _(j):
+                @for_range_opt(max(num_categories_per_feature))
+                def _(k):
+                    max_data_masks[j][k] = flag * new_data_masks[j][k] + (1 - flag) * max_data_masks[j][k]
+        @else_
+        def _():
+            pass
+    return max_data_masks, max_feature_idx, max_gain
+
+def print_data_masks(data_masks):
+    @for_range_opt(num_samples)
+    def _(i):
+        print_ln('data_masks[i]=%s', data_masks[i].reveal())
+
+data = combineInput()
+initial_entropy = initialEntropy(data)
+data_mask = sint.Array(num_samples)
+data_mask.assign_all(sint(1))
+
+feature_mask = cint.Array(max(num_categories_per_feature))
+feature_mask.assign_all(1)
+
+root = Tree(-1, 'root', data, data_mask, feature_mask)
+root.createChildren()
+# Feature mask disables features that have already been chosen for splitting
+# feature_mask = cint.Array(max(num_categories_per_feature))
+# feature_mask.assign_all(1)
+
+# data_masks, feature_idx, gain = chooseBestFeature(initial_entropy, data_masks, feature_mask)
+# print_ln('initial_entropy=%s', initial_entropy.reveal())
+# print_ln('best feature=%s', feature_idx.reveal())
+# print_ln('gain = %s', gain.reveal())
+# print_data_masks(data_masks)
+
+
