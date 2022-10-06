@@ -1,0 +1,7 @@
+###Test function calls
+
+
+def print_call():
+  print_ln("Hello secret number is 7")
+  number = sint(7)
+  print_ln('%s',number.reveal())

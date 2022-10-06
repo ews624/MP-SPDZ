@@ -117,7 +117,7 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 
 	###Need to refactoring
 	### Name Clean up and commenting
-	print_ln('in gainchecker num of squares is %s,triangles %s',squares.reveal(),triangles.reveal())
+	print_ln('Num of squares is %s,triangles %s',squares.reveal(),triangles.reveal())
 
 	squares = sfix(squares)
 	triangles = sfix(triangles)
@@ -191,9 +191,9 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 
 	completed = sfix(partone+parttwo)
 	completed = completed *sfix(sfix(sfix(outlineTotal)/sfix(total)))
-	entroOne = sfix(completed)
+	outline_entropy = sfix(completed)
 
-	print_ln('outline tri is %s, outline total is %s',outlineTri.reveal(),outlineTotal.reveal())
+	print_ln('outline triangles is %s, outline total is %s',outlineTri.reveal(),outlineTotal.reveal())
 
 	solidTotal = sfix(sfix(solidSqu)+sfix(solidTri))
 
@@ -207,27 +207,25 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 	completed = completed * sfix(sfix(sfix(solidTotal)/sfix(total)))
 
 
-	entroOne = entroOne+ completed
-	print_ln('entroOne is %s',entroOne.reveal())
-	print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
+	outline_entropy = outline_entropy+ completed
+	print_ln('Entropy of the outline attributes is %s',outline_entropy.reveal())
+	#print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
 	totalItems = totalTri + totalSqu
 	allSolid = solidTri + solidSqu
 	allDashed = dashedSqu + dashedTri
-	print_ln('total items is %s and allsolids is %s',totalItems.reveal(),allSolid.reveal())
-	print_ln('all dashed is %s',allDashed.reveal())
-	print_ln('')
+	print_ln('total amount of items is %s and the amount of solid outlines items is %s',totalItems.reveal(),allSolid.reveal())
+	print_ln('Amount of dashed items is %s',allDashed.reveal())
 
-
-	dottedX = sfix(dottedTri)
-	dottedBot = sfix(dottedTri+dottedSqu)
-	dottedY = sfix(dottedSqu)
-	x =sfix(dottedX/dottedBot)
-	y = sfix(dottedY/dottedBot)
+	dotted_triangles = sfix(dottedTri)
+	dotted_total = sfix(dottedTri+dottedSqu)
+	dotted_squares = sfix(dottedSqu)
+	x =sfix(dotted_triangles/dotted_total)
+	y = sfix(dotted_squares/dotted_total)
 	partone = -(x*mpc_math.log2_fx(x))
 	parttwo = -(y*mpc_math.log2_fx(y))
-	entrotwo = (partone+parttwo)
-	print_ln('dotted tri"s is %s, dotted square is %s',dottedX.reveal(),dottedY.reveal())
-	entrotwo = sfix(entrotwo*sfix(sfix(dottedBot)/sfix(total)))
+	dot_entropy = (partone+parttwo)
+	print_ln('Amount of triangles with dots is %s, amount of squares with dots is %s',dotted_triangles.reveal(),dotted_squares.reveal())
+	dot_entropy = sfix(dot_entropy*sfix(sfix(dotted_total)/sfix(total)))
 	undotX = sfix(undotTri)
 	undotBot = sfix(undotTri+undotSqu)
 	undotY = sfix(undotSqu)
@@ -235,15 +233,15 @@ def gainChecker(squares,triangles,totalofColor,root,CombinedInputs,ColorInt,tota
 	y = sfix(undotY/undotBot)
 	partone = -(x*mpc_math.log2_fx(x))
 	parttwo = -(y*mpc_math.log2_fx(y))
-	entrotwo = entrotwo + (sfix(undotBot)/sfix(total)*(sfix(partone)+sfix(parttwo)))
-	print_ln('entrotwo is %s',entrotwo.reveal())
-	print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
+	dot_entropy = dot_entropy + (sfix(undotBot)/sfix(total)*(sfix(partone)+sfix(parttwo)))
+	print_ln('The dot attribute entropy is %s',dot_entropy.reveal())
+	#print_ln('partone is %s and parttwo is %s',partone.reveal(),parttwo.reveal())
 	print_ln('')
 
 
 
-	gainOne = sfix(color_Entropy[ColorInt-1] - entroOne)
-	gainTwo = sfix(color_Entropy[ColorInt-1] - entrotwo)
+	gainOne = sfix(color_Entropy[ColorInt-1] - outline_entropy)
+	gainTwo = sfix(color_Entropy[ColorInt-1] - dot_entropy)
 
 
 	###Fix, need to build tree by biggest gain
@@ -400,13 +398,6 @@ def attribute_gain(CombinedInputs,Comparison_Entropy,column_number,range):
 
 
 
-
-
-
-
-
-
-
 #Combine all 3 parties inputs into 1 single array for ease of use
 CombinedInputs = generateArray(rows,columns)
 #Since we have 3 parties with equal amount of entries, we can just do this
@@ -417,7 +408,7 @@ totalRows = rows*3
 #3 is used at the second parameter because that is the column index for the shape attribute
 Shape_Entropy = sfix(0.0)
 Shape_Entropy = first_entropy(CombinedInputs,3,totalRows)
-print_ln('Entropy of the Shape attribute is %s', Shape_Entropy.reveal())
+print_ln('Entropy of the Shape attribute for the entire dataset is %s', Shape_Entropy.reveal())
 print_ln()
 print_ln()
 
