@@ -12,8 +12,12 @@ string = stream.read()
 test = "1"
 print("The string is:", string)
 if test in string:
-    print('Test passed')
-
+    print('All items in the array are the same')
+    stream = os.popen('./emulate.x Same-called')
+    string = stream.read()
+    print("The string is:", string)
 else:
-    print("test did not pass")
-    
+    print("There are different values in the array")
+    stream = os.popen('./emulate.x Unique-called')
+    string = stream.read()
+    print("The string is:", string)
