@@ -9,7 +9,7 @@ b = sint(2)
 
 def check_column(column,length):
     answer = sint.MemValue(1)
-    column[0] = sint(1)
+    #column[0] = sint(1)
     @for_range_opt(length-1)
     def _(i):
         value = column[i]

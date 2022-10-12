@@ -7,7 +7,13 @@ import subprocess
 
 print('Hello')
 
-stream = os.popen('./emulate.x python_caller')
+#stream = os.popen('./emulate.x python_caller')
+stream = os.popen('./shamir-party.x -p 0 python_caller')
+os.system("gnome-terminal -e 'bash -c \"cd Documents/GitHub/MP-SPDZ/;./shamir-party.x -p 1 python_caller; sleep 5\" '")
+os.system("gnome-terminal -e 'bash -c \"cd Documents/GitHub/MP-SPDZ/;./shamir-party.x -p 2 python_caller; sleep 5\" '")
+
+
+
 string = stream.read()
 test = "1"
 print("The string is:", string)
