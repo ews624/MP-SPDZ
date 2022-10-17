@@ -15,6 +15,10 @@ os.system("gnome-terminal -e 'bash -c \"cd Documents/GitHub/MP-SPDZ/;./shamir-pa
 
 
 string = stream.read()
+
+stringtoint = int(string)
+two = stringtoint + 1
+print("This is stringtoint ",stringtoint," and this is two", two)
 test = "1"
 print("The string is:", string)
 if test in string:

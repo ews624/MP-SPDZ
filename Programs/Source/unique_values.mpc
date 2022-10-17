@@ -1,0 +1,43 @@
+import math
+import mpc_math
+
+sfix.set_precision(16,32)
+rows = 14
+columns = 4
+
+
+def generateArray(rows,columns):
+
+    p0_inputs = sint.Matrix(rows,columns)
+    p0_inputs.input_from(0)
+
+    p1_inputs = sint.Matrix(rows,columns)
+    p1_inputs.input_from(1)
+
+    p2_inputs = sint.Matrix(rows,columns)
+    p2_inputs.input_from(2)
+    #Large Array
+    CombinedInputs = sint.Matrix((3*rows),columns)
+
+    @for_range_parallel(3,[rows,columns])
+    def hi(i,j):
+    	CombinedInputs[i][j] = p0_inputs[i][j]
+		#By adding rows we offeset the start point for inputing data into the CombinedInputs array
+    	CombinedInputs[i+rows][j] = p1_inputs[i][j]
+    	CombinedInputs[i+(rows*2)][j] = p2_inputs[i][j]
+    return CombinedInputs
+
+argumentOne = program.args[1]
+
+CombinedInputs = generateArray(rows,columns)
+totalRows = rows*3
+
+argumentOne = int(argumentOne)
+unique_vales = sint.MemValue(1)
+@for_range_opt(totalRows)
+def f(i):
+    compvar = CombinedInputs[i][argumentOne]
+    f = (unique_vales < compvar)
+    unique_vales.write((compvar*f)+(unique_vales*(sint(1)-f)))
+
+print_ln('%s',unique_vales.reveal())

@@ -21,7 +21,7 @@ def check_column(column,length):
 
 
 def main():
-    print_ln('Hello')
+    #print_ln('Hello')
     check_column(a,10)
 
 main()
