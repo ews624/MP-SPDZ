@@ -1,0 +1,56 @@
+import math
+import mpc_math
+
+sfix.set_precision(16,32)
+rows = 14
+columns = 4
+
+
+def generateArray(rows,columns):
+
+    p0_inputs = sint.Matrix(rows,columns)
+    p0_inputs.input_from(0)
+
+    p1_inputs = sint.Matrix(rows,columns)
+    p1_inputs.input_from(1)
+
+    p2_inputs = sint.Matrix(rows,columns)
+    p2_inputs.input_from(2)
+    #Large Array
+    CombinedInputs = sint.Matrix((3*rows),columns)
+
+    @for_range_parallel(3,[rows,columns])
+    def hi(i,j):
+    	CombinedInputs[i][j] = p0_inputs[i][j]
+		#By adding rows we offeset the start point for inputing data into the CombinedInputs array
+    	CombinedInputs[i+rows][j] = p1_inputs[i][j]
+    	CombinedInputs[i+(rows*2)][j] = p2_inputs[i][j]
+    return CombinedInputs
+
+def checkEntropy(CombinedInputs,ColorInt,totalRows):
+    squares = sint.MemValue(0)
+    triangles = sint.MemValue(0)
+    totalcolor = sint.MemValue(0)
+
+	#This for loop is for counting the triangles and squares in each different color
+    @for_range_opt(totalRows)
+    def _(j):
+        color_comparison = (ColorInt ==CombinedInputs[j][0])
+        totalcolor.write(((totalcolor+1)*color_comparison)+(totalcolor*(sint(1)-color_comparison)))
+        square = (sint(2) == CombinedInputs[j][3])
+        squares.write(squares + (color_comparison*square))
+        triangle = (sint(1) == CombinedInputs[j][3])
+        triangles.write(triangles+(triangle*color_comparison))
+    return (squares*triangles)
+
+
+branchNumber = program.args[1]
+
+CombinedInputs = generateArray(rows,columns)
+totalRows = rows*3
+
+#inputColumn = int(inputColumn)
+branchNumber = int(branchNumber)
+
+returnVal = checkEntropy(CombinedInputs,branchNumber,totalRows)
+print_ln("%s",returnVal.reveal())
