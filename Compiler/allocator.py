@@ -313,7 +313,7 @@ class Merger:
 
         reg_nodes = {}
         last_def = defaultdict_by_id(lambda: -1)
-        last_read = defaultdict_by_id(lambda: -1)
+        last_read = defaultdict_by_id(list)
         last_mem_write = []
         last_mem_read = []
         last_mem_write_of = defaultdict(list)
@@ -332,6 +332,8 @@ class Merger:
         round_type = {}
 
         def add_edge(i, j):
+            if i in (-1, j):
+                return
             G.add_edge(i, j)
             for d in (self.depths, self.real_depths):
                 if d[j] < d[i]:
@@ -341,15 +343,13 @@ class Merger:
             for dup in reg.duplicates:
                 if last_def[dup] not in (-1, n):
                     add_edge(last_def[dup], n)
-            last_read[reg] = n
+            last_read[reg].append(n)
 
         def write(reg, n):
             for dup in reg.duplicates:
-                if last_read[dup] not in (-1, n):
-                    add_edge(last_read[dup], n)
-                if id(dup) in [id(x) for x in block.instructions[n].get_used()] and \
-                   last_read[dup] not in (-1, n):
-                    add_edge(last_read[dup], n)
+                add_edge(last_def[dup], n)
+                for m in last_read[dup]:
+                    add_edge(m, n)
             last_def[reg] = n
 
         def handle_mem_access(addr, reg_type, last_access_this_kind,

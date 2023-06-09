@@ -1240,12 +1240,18 @@ class Tape:
             def t(x):
                 return "integer" if x == "modp" else x
 
+            def f(num):
+                try:
+                    return "%12.0f" % num
+                except:
+                    return str(num)
+
             res = []
             for req, num in self.items():
                 domain = t(req[0])
                 if num < 0:
                     num = float('inf')
-                n = "%12.0f" % num
+                n = f(num)
                 if req[1] == "input":
                     res += ["%s %s inputs from player %d" % (n, domain, req[2])]
                 elif domain.endswith("edabit"):
@@ -1262,7 +1268,7 @@ class Tape:
                 elif req[0] != "all":
                     res += ["%s %s %ss" % (n, domain, req[1])]
             if self["all", "round"]:
-                res += ["% 12.0f virtual machine rounds" % self["all", "round"]]
+                res += ["%s virtual machine rounds" % f(self["all", "round"])]
             return res
 
         def __str__(self):
@@ -1501,11 +1507,9 @@ class Tape:
             :param other: any convertible type
 
             """
-            if isinstance(other, Tape.Register) and other.block != Program.prog.curr_block:
-                other = type(self)(other)
-            else:
-                other = self.conv(other)
-            if Program.prog.curr_block in [x.block for x in self.duplicates]:
+            diff_block = isinstance(other, Tape.Register) and self.block != other.block
+            other = type(self)(other)
+            if not diff_block:
                 self.program.start_new_basicblock()
             if self.program != other.program:
                 raise CompilerError(
