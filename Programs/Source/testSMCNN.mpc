@@ -1,0 +1,32 @@
+from sklearn import datasets, linear_model
+from sklearn.model_selection import train_test_split
+
+X, y = datasets.load_diabetes(return_X_y=True)
+
+# normalize
+y /= y.max()
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+
+X_train = sfix.input_tensor_via(0, X_train)
+y_train = sfix.input_tensor_via(0, y_train)
+
+X_test = sfix.input_tensor_via(0, X_test)
+y_test = sfix.input_tensor_via(0, y_test)
+
+from Compiler import ml
+
+try:
+    batch_size = int(program.args[1])
+except:
+    batch_size = 1
+    
+n_epochs = 5
+
+print(len(x))
+#test = ml.SGD([]
+
+#sgd = ml.SGD([ml.Dense(60000, 784, 128, activation='relu'),
+#              ml.Dense(60000, 128, 10),
+#              ml.MultiOutput(60000, 10)], n_epochs,
+#             report_loss=True)
